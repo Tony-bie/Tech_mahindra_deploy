@@ -1,11 +1,11 @@
 name: CI — TechMahindra PMS
 
-# Corre en cada PR hacia main y en cada push directo a main
+# Corre en PRs hacia dev o main, y en pushes directos a ambas ramas permanentes
 on:
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   push:
-    branches: [main]
+    branches: [main, dev]
 
 # Cancela runs anteriores del mismo branch si llega uno nuevo
 concurrency:
@@ -22,7 +22,7 @@ jobs:
         working-directory: project/my-app
 
     steps:
-      # Descarga el código del repo
+      # Descarga el codigo del repo
       - name: Checkout
         uses: actions/checkout@v4
 
