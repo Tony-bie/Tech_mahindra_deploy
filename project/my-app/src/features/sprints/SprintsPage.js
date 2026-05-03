@@ -4,18 +4,32 @@ import api from '../../config/api';
 import { useAuthContext } from '../../shared/context/AuthContext';
 import CreateSprint from './CreateSprint'
 import './SprintsPage.css'
-
-
-   /* { key: 'board', label: 'Sprint Board', icon: '▥', kind: 'link', suffix: 'sprintboard'}, */
+import ws from '../../config/ws';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 
 
 export default function SprintsPage(){
     const { user } = useAuthContext()
+    const navigate    = useNavigate();
+    const location    = useLocation();
     const { id } = useParams();
     const [tasksByStatus, setTasksByStatus] = useState(null);
     const [, setLoading] = useState(true);
     const [isPanelOpen, setIsPanelOpen] = useState(false)
     const [statusFilter, setStatusFilter] = useState('All_sprints');
+
+    const projectName = location.state?.projectName || `Proyecto ${id}`;
+
+    
+    function buildFilterStatus(data){        
+        return {
+            all_sprints: data,
+            planned: data.filter(t => t.status === 'planned'),
+            active: data.filter(t => t.status === 'active'),
+            cancelled: data.filter(t => t.status === 'cancelled'),
+            done: data.filter(t => t.status === 'done'),
+        };
+    }
 
     useEffect(() => {
         async function consultSprint() {
@@ -33,19 +47,10 @@ export default function SprintsPage(){
                 const data = sprint.data.data
 
                 console.log("Data consult", data)
-
-                const tasksByStatus = {
-                    all_sprints: data,
-                    planned: data.filter(t => t.status === 'planned'),
-                    active: data.filter(t => t.status === 'active'),
-                    cancelled: data.filter(t => t.status === 'cancelled'),
-                    done: data.filter(t => t.status === 'done'),
-                };
-
-                if (!tasksByStatus){
+                if (!data){
                     return null
                 }
-                setTasksByStatus(tasksByStatus)
+                setTasksByStatus(buildFilterStatus(data))
             }
             catch(error){
                 console.error(error)
@@ -54,13 +59,58 @@ export default function SprintsPage(){
             }
         }
         consultSprint();
+
+        const handler = ({ data }) => {
+            const mensaje = JSON.parse(data)
+            if (mensaje.type === 'SPRINT_CREATED') {
+                const newSprint = mensaje.data[0]
+                setTasksByStatus(prev => ({
+                    ...prev,
+                    all_sprints: [...prev.all_sprints, newSprint],
+                    [newSprint.status]: [...prev[newSprint.status], newSprint]
+                    }))
+                }
+            }
+
+        ws.addEventListener('message', handler)
+
+        return () => ws.removeEventListener('message', handler)
+        
     }, [id])
+
+
+
 
     const filteredSprints = statusFilter === 'All_sprints'
         ? tasksByStatus?.all_sprints
         : tasksByStatus?.[statusFilter]
 
     return(
+        <>
+        <div className='topBar'>
+                <div className='breadCrumb'>
+                    <button className='crumbBtn' onClick={() => navigate('/projects')}>
+                        Proyectos
+                    </button>
+                    <span className='sep'>/</span>
+                    <button
+                        className='crumbBtn'
+                        onClick={() =>
+                            navigate(`/projects/${id}/view`, { state: { projectName } })
+                        }
+                    >
+                        {projectName}
+                    </button>
+                    <span className='sep'>/</span>
+                    <span className='crumbCurrent'>Sprint page</span>
+                </div>
+
+                {(user.role === "pm" || user.role === "admin") && (
+                <button className="btn-new-sprint" onClick={() => setIsPanelOpen(true)}>
+                + Crear sprint
+                </button>
+            )}
+            </div>
         <div className='sprint-layout'>
         <div>
             <h1 className="sprint-header">Sprints</h1>
@@ -76,12 +126,6 @@ export default function SprintsPage(){
                 <option value="done">Done</option>
                 </select>
             </div>
-
-            {(user.role === "pm" || user.role === "admin") && (
-                <button className="btn-new-sprint" onClick={() => setIsPanelOpen(true)}>
-                + Crear sprint
-                </button>
-            )}
             </div>
 
             {/* En la tabla agrega el botón View */}
@@ -117,7 +161,7 @@ export default function SprintsPage(){
         {isPanelOpen && <CreateSprint onClose={() => setIsPanelOpen(false)} /> }
 
         </div>
-
+        </>
         
     );
 }

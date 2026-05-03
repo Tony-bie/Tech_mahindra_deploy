@@ -42,3 +42,12 @@
     font-weight: bold;
     border: 1px solid #E31837;
 }
+
+.login-button:hover {
+  background-color: rgb(184, 17, 17);
+  border-color: rgba(200, 30, 30, 0.45);
+}
+
+.login-button:active {
+  transform: scale(0.97);
+}

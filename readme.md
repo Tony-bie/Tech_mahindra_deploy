@@ -37,6 +37,11 @@ o si quieres correrlo en modo desarrollo
 ```console
 tu@computadora: node_runtime $ npm run dev
 ```
+Para corre el WebSocket, en la misma carpeta que se arranca el backend, se corre este comando
+```console
+tu@computadora: node_runtime $ npm run ws
+
+```
 Para correr frontend
 ```console
 tu@computadora: ~ $ cd Project-Management-System-TechMahindra/project/my-app
@@ -66,3 +71,7 @@ Hacer testing en funciones que puedan ocasionar problemas. Hacer pruebas con un 
 - Error de Express.js -> No enciende servidor Express.js. Solución -> Verificar el json y agregar lo que falta.
 - Puerto ocupado -> pruerto está siendo utilizado por otro servidor. Solución -> Cambiar el .env por un servidor por otro puerto y los otros programas que usen ese server.
 - Token expired -> El usuario no puede autenticarse. Solución -> Verificar eque la key en el .env sea el mismo en todos los servicios desplegados.
+
+
+### Referencias
+- websockets. (2024). ws [Repositorio de software]. GitHub. https://github.com/websockets/ws

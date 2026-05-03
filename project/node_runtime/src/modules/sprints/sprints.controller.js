@@ -33,6 +33,7 @@ async function create_sprint(req, res) {
         const response = await supabase
             .from('sprint')
             .insert({name: nombre, begin_at: begin, deadline: end, status: estado, SP_estimated: SP, id_project: project_id})
+            .select()
 
         console.log(response)
 
@@ -46,4 +47,5 @@ async function create_sprint(req, res) {
         return res.status(500).json({ message: error.message })
     }
 }
+
 module.exports = { consult_sprints, create_sprint};

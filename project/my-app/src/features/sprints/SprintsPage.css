@@ -32,7 +32,41 @@
   cursor: pointer;
 }
 
-/* Botón crear sprint */
+.topBar{
+  background-color: #FFF;
+  border-bottom: 1px solid #E5E5E3; 
+  padding: 0 32px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.breadCrumb{
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ padding: 0px;
+ font-size: 13px; 
+}
+
+.crumbBtn{
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13;
+  color: #888;
+  padding: 0px 
+}
+
+.sep{
+  color: #CCC;
+}
+.crumbCurrent{
+  color: #1A1A1A;
+  font-weight: 500;
+}
+
 .btn-new-sprint {
   padding: 7px 16px;
   background: #e53935;
