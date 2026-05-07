@@ -5,12 +5,12 @@ const server = new WebSocketServer({
 })
 
 server.on('connection', (socket) => {
-    clients.add(socket)
 
     socket.on('message', (message) => {
         try{
             const mensaje = JSON.parse(message.toString()) 
             console.log(message)
+            console.log(mensaje)
 
             server.clients.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
@@ -24,12 +24,11 @@ server.on('connection', (socket) => {
     })
 
     socket.on('close', () => {
-        clients.delete(socket) 
+        console.log('client disconnected') 
     });
 
     socket.on('error', (err) => {
         console.error('Socket error:', err)
-        clients.delete(socket)
     })
 
     

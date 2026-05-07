@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../config/api';
+import ws from '../../config/ws';
 
 /**
  * HU-09 — Asignación de work items a viewer o al propio PM
@@ -79,11 +80,13 @@ function WorkItems({ projectId, projectName }) {
                 title:       newTitle.trim(),
                 description: newDesc.trim() || null,
             });
+            console.log('res: ',res, 'data: ', data)
             if (res.ok) {
                 setNewTitle('');
                 setNewDesc('');
                 showMsg('Item creado correctamente');
                 loadItems();
+                ws.send(JSON.stringify({type: "WORK_ITEM_CREATED", data: data.item}))
             } else {
                 showMsg(data.message || 'Error creando item', 'error');
             }
@@ -108,6 +111,20 @@ function WorkItems({ projectId, projectName }) {
             showMsg('Error de conexión', 'error');
         }
     }
+
+    useEffect(() => {
+        const work_item_handler = ({data}) => {
+            const message = JSON.parse(data)
+            if(message.type === 'WORK_ITEM_CREATED') {
+                const newWorkITem = message.data
+                setItems(prev => [...prev, newWorkITem])
+            }
+        }
+
+        ws.addEventListener('message', work_item_handler)
+
+        return() => ws.removeEventListener('message', work_item_handler)
+    }, [])
 
     /* ── Render ───────────────────────────────────────────── */
 
