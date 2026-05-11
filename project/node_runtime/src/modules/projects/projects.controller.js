@@ -424,6 +424,59 @@ async function removeViewerFromProject(req, res) {
     }
 }
 
+// =====================================================
+// GET /projects/:id/assignable
+// Devuelve el PM del proyecto + todos los viewers vinculados.
+// Usado para poblar el dropdown de asignación en el Sprint Board.
+// =====================================================
+async function getAssignableMembers(req, res) {
+    try {
+        const projectId = parseInt(req.params.id);
+
+        const { data: project, error: projErr } = await supabase
+            .from('project')
+            .select('id_project, id_pm')
+            .eq('id_project', projectId)
+            .single();
+
+        if (projErr || !project) {
+            return res.status(404).json({ message: 'Proyecto no encontrado' });
+        }
+
+        // Obtener datos del PM
+        const { data: pmUser } = await supabase
+            .from('users')
+            .select('id_user, username, email')
+            .eq('id_user', project.id_pm)
+            .single();
+
+        // Obtener viewers vinculados al proyecto
+        const { data: members } = await supabase
+            .from('project_member')
+            .select('id_user')
+            .eq('id_project', projectId);
+
+        const viewerIds = (members || []).map(m => m.id_user);
+
+        let viewerUsers = [];
+        if (viewerIds.length > 0) {
+            const { data } = await supabase
+                .from('users')
+                .select('id_user, username, email')
+                .in('id_user', viewerIds);
+            viewerUsers = data || [];
+        }
+
+        const assignable = [];
+        if (pmUser) assignable.push({ ...pmUser, projectRole: 'pm' });
+        viewerUsers.forEach(v => assignable.push({ ...v, projectRole: 'viewer' }));
+
+        return res.status(200).json({ assignable });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     getProjects,
     getManagers,
@@ -432,4 +485,5 @@ module.exports = {
     getProjectViewers,
     addViewerToProject,
     removeViewerFromProject,
+    getAssignableMembers,
 };

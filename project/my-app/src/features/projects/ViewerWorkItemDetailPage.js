@@ -62,7 +62,7 @@ function statusLabel(status) {
 }
 
 export default function ViewerWorkItemDetailPage() {
-    const { id, itemId } = useParams();
+    const { id } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuthContext();
@@ -82,7 +82,7 @@ export default function ViewerWorkItemDetailPage() {
     });
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
-    const [timeline, setTimeline] = useState([
+    const [, setTimeline] = useState([
         {
             id: 'created',
             title: 'Ítem de trabajo creado',

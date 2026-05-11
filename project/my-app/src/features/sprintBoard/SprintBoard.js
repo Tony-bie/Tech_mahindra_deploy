@@ -7,7 +7,22 @@ import { useAuthContext } from '../../shared/context/AuthContext';
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const TYPE_LABEL = { user_story: 'User Story', task: 'Task', bug: 'Bug' };
 
+const COL_TO_STATUS = { todo: 'todo', inprogress: 'in_progress', done: 'done' };
+
 const fmtDate = (d) => (d ? String(d).slice(0, 10) : '—');
+
+// Determina si el usuario puede mover una tarjeta del Kanban.
+// - admin / pm: cualquier tarjeta del proyecto (backend valida ownership del PM)
+// - viewer: solo si la tarjeta está asignada a él
+function canMoveCard(user, card) {
+    const role = user?.role;
+    if (role === 'admin' || role === 'pm') return true;
+    if (role === 'viewer') {
+        const uid = user?.id_user ?? user?.id;
+        return uid != null && String(card.assignee) === String(uid);
+    }
+    return false;
+}
 
 /**
  * Convierte el array de work_items que devuelve el API
@@ -66,8 +81,13 @@ const Badge = ({ type }) => (
     <span className={`badge ${BADGE_CLASS[type] || 'badge--task'}`}>{type}</span>
 );
 
-const Card = ({ card, done = false }) => (
-    <div className={`card${done ? ' card--done' : ''}`}>
+const Card = ({ card, done = false, draggable = false, onDragStart }) => (
+    <div
+        className={`card${done ? ' card--done' : ''}`}
+        draggable={draggable}
+        onDragStart={draggable ? onDragStart : undefined}
+        style={draggable ? { cursor: 'grab' } : { cursor: 'default' }}
+    >
         <div className="card__top">
             <Badge type={card.type} />
             <span className="card__id">#{card.id}</span>
@@ -101,10 +121,34 @@ const Card = ({ card, done = false }) => (
     </div>
 );
 
-const Column = ({ col }) => {
+const Column = ({ col, user, onMoveCard }) => {
     const isDone = col.id === 'done';
+    const [isOver, setIsOver] = useState(false);
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (!isOver) setIsOver(true);
+    };
+    const handleDragLeave = () => setIsOver(false);
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsOver(false);
+        const itemId  = e.dataTransfer.getData('text/plain');
+        const fromCol = e.dataTransfer.getData('source-col');
+        if (itemId && fromCol && fromCol !== col.id) {
+            onMoveCard?.(itemId, fromCol, col.id);
+        }
+    };
+
     return (
-        <div className={`column column--${col.color}`}>
+        <div
+            className={`column column--${col.color}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            style={isOver ? { outline: '2px dashed #CC0000', outlineOffset: -4 } : undefined}
+        >
             <div className="column__header">
                 <span>{col.label}</span>
                 <span className="column__count">{col.cards.length}</span>
@@ -115,9 +159,22 @@ const Column = ({ col }) => {
                         No items
                     </p>
                 )}
-                {col.cards.map(card => (
-                    <Card key={card.id} card={card} done={isDone} />
-                ))}
+                {col.cards.map(card => {
+                    const draggable = canMoveCard(user, card);
+                    return (
+                        <Card
+                            key={card.id}
+                            card={card}
+                            done={isDone}
+                            draggable={draggable}
+                            onDragStart={(e) => {
+                                e.dataTransfer.effectAllowed = 'move';
+                                e.dataTransfer.setData('text/plain', card.id);
+                                e.dataTransfer.setData('source-col', col.id);
+                            }}
+                        />
+                    );
+                })}
             </div>
         </div>
     );
@@ -135,7 +192,7 @@ const FormField = ({ label, required, children }) => (
  * Props requeridos: sprint, user, onCancel, onAdded
  */
 const AddWorkItemForm = ({ sprint, user, onCancel, onAdded }) => {
-    const { id_sprint } = useParams();
+    const { id, id_sprint } = useParams();
 
     const [form, setForm] = useState({
         type: '', assignee: '', title: '', sp: 8, weight: 2,
@@ -144,11 +201,29 @@ const AddWorkItemForm = ({ sprint, user, onCancel, onAdded }) => {
     });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError]           = useState('');
+    const [assignableUsers, setAssignableUsers] = useState([]);
 
     useEffect(() => {
         const uid = user?.id_user ?? user?.id;
         if (uid) setForm(f => ({ ...f, created_by: uid }));
     }, [user]);
+
+    useEffect(() => {
+        if (!id) return;
+        api.get(`/projects/${id}/assignable`)
+            .then(({ res, data }) => {
+                if (res?.ok) {
+                    setAssignableUsers(data.assignable || []);
+                } else {
+                    console.error('[assignable] HTTP', res?.status, data);
+                    setError(data?.message || `No se pudo cargar la lista de miembros (HTTP ${res?.status}).`);
+                }
+            })
+            .catch(err => {
+                console.error('[assignable] network error', err);
+                setError('Error de conexión al cargar miembros del proyecto.');
+            });
+    }, [id]);
 
     const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -177,8 +252,7 @@ const AddWorkItemForm = ({ sprint, user, onCancel, onAdded }) => {
     return (
         <div className="add-form">
             <div className="add-form__header">
-                <span className="add-form__title">Add Work Item</span>
-                <span className="add-form__note">RF-08, RF-09 · PM only</span>
+                <span className="add-form__title">Agregar work item</span>
             </div>
 
             <div className="add-form__body">
@@ -204,14 +278,25 @@ const AddWorkItemForm = ({ sprint, user, onCancel, onAdded }) => {
                         />
                     </FormField>
 
-                    <FormField label="Assignee" required>
+                    <FormField label="Asignado a" required>
                         <select className="form-control" value={form.assignee} onChange={e => set('assignee', e.target.value)}>
-                            <option value="">Select assignee…</option>
-                            <option value="1">LC</option>
-                            <option value="2">BK</option>
-                            <option value="3">AD</option>
-                            <option value="4">JR</option>
+                            <option value="">— Selecciona un miembro —</option>
+                            {assignableUsers.map(u => (
+                                <option key={u.id_user} value={u.id_user}>
+                                    {u.username} ({u.projectRole === 'pm' ? 'PM' : 'Visor'})
+                                </option>
+                            ))}
                         </select>
+                        {assignableUsers.length === 0 && (
+                            <span style={{ fontSize: 11, color: '#AAA', marginTop: 3 }}>
+                                Sin miembros vinculados al proyecto
+                            </span>
+                        )}
+                        {assignableUsers.length === 1 && assignableUsers[0].projectRole === 'pm' && (
+                            <span style={{ fontSize: 11, color: '#AAA', marginTop: 3 }}>
+                                Solo tú estás vinculado a este proyecto. Vincula visores para poder asignarles items.
+                            </span>
+                        )}
                     </FormField>
                 </div>
 
@@ -294,7 +379,7 @@ export default function SprintBoard() {
     const fetchWorkItems = useCallback(async () => {
         setLoading(true);
         try {
-            const { res, data } = await api.get(`/sprintBoard/${id_sprint}/getWorkItems`);
+            const { data } = await api.get(`/sprintBoard/${id_sprint}/getWorkItems`);
             // Backend devuelve { message, data: supabaseResponse }
             // supabaseResponse = { data: [...workItems], error }
             const items = data?.data?.data ?? [];
@@ -308,6 +393,39 @@ export default function SprintBoard() {
 
     useEffect(() => {
         fetchWorkItems();
+    }, [fetchWorkItems]);
+
+    // ── Drag & drop: mover work item entre columnas ──────────────────────────
+    const handleMoveCard = useCallback(async (itemId, fromCol, toCol) => {
+        const newStatus = COL_TO_STATUS[toCol];
+        if (!newStatus) return;
+
+        // Snapshot para revertir si el backend rechaza el cambio
+        let snapshot;
+        setColumns(prev => {
+            snapshot = prev;
+            const idx = prev[fromCol]?.cards.findIndex(c => c.id === itemId);
+            if (idx == null || idx === -1) return prev;
+            const moved = prev[fromCol].cards[idx];
+            return {
+                ...prev,
+                [fromCol]: { ...prev[fromCol], cards: prev[fromCol].cards.filter((_, i) => i !== idx) },
+                [toCol]:   { ...prev[toCol],   cards: [...prev[toCol].cards, moved] },
+            };
+        });
+
+        try {
+            const { res, data } = await api.patch(`/work-items/${itemId}/status`, { status: newStatus });
+            if (!res?.ok) {
+                console.error('[move] backend rechazó el cambio:', res?.status, data);
+                if (snapshot) setColumns(snapshot);
+                fetchWorkItems();
+            }
+        } catch (err) {
+            console.error('[move] error de conexión:', err);
+            if (snapshot) setColumns(snapshot);
+            fetchWorkItems();
+        }
     }, [fetchWorkItems]);
 
     // ── Carga nombre del proyecto si no vino por state ───────────────────────
@@ -437,7 +555,7 @@ export default function SprintBoard() {
             ) : (
                 <div className="board">
                     {Object.values(filteredColumns).map(col => (
-                        <Column key={col.id} col={col} />
+                        <Column key={col.id} col={col} user={user} onMoveCard={handleMoveCard} />
                     ))}
                 </div>
             )}

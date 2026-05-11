@@ -5,7 +5,7 @@ import { useAuthContext } from '../../shared/context/AuthContext';
 import CreateSprint from './CreateSprint'
 import './SprintsPage.css'
 import ws from '../../config/ws';
-import { Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 
 export default function SprintsPage(){

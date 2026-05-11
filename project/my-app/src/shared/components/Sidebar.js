@@ -4,7 +4,6 @@ import {
     ICONS,
     NAV_ITEMS,
     VIEWER_GLOBAL_ITEMS,
-    PROJECT_NAV_ITEMS,
 } from './Sidebar.constants';
 import SidebarProjectSection from './SidebarProjectSection';
 import './Sidebar.css';
