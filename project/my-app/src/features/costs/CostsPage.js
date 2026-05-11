@@ -65,7 +65,6 @@ export default function CostsPage() {
     const { user }      = useAuthContext();
 
     const isPM      = user?.role === 'pm' || user?.role === 'admin';
-    const isViewer  = user?.role === 'viewer';
     const projectName = location.state?.projectName || `Proyecto ${id}`;
 
     // ── Estado ────────────────────────────────────────────────────────────────
