@@ -45,7 +45,7 @@ jobs:
 
       # Detecta errores de sintaxis y reglas ESLint
       - name: Lint
-        run: pnpm run lint --if-present
+        run: pnpm run lint 
 
       # Compila el bundle de produccion — falla si hay errores de JS/JSX
       - name: Build
