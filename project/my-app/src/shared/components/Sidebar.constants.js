@@ -11,6 +11,7 @@ export const ICONS = {
     backlog:    '▦',
     sprintboard:'◈',
     costs:      '◍',
+    suggestions: '⬡' ,
 };
 
 // ─── Navegación global (fuera de contexto de proyecto) ───────────────────────
@@ -33,6 +34,7 @@ export const NAV_ITEMS = [
     // ── Inteligencia ───────────────────────────────────────────────────────
     { to: '/audit',       label: 'Bitácora',      icon: 'audit',  section: 'inteligencia' },
     { to: '/leaderboard', label: 'Clasificación',  icon: 'leader', section: 'inteligencia' },
+    { to: '/suggestions', label: 'Sugerencias de proyecto', icon: 'suggestions', section:'inteligencia'}
 ];
 
 // Items especiales del viewer (mismos destinos, distintas etiquetas)

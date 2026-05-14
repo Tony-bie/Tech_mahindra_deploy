@@ -15,37 +15,38 @@ tu@computadora:~$ git clone https://github.com/2kLira/Project-Management-System-
 ```
 - Instalar las dependencias (checa el package.json para ver que dependencias se instalaron).
 
+#### Nota importante: Por la creciente crisis de seguridad que están sufriendo varios lenguajes, uno de esos es JavaScript (el lenguaje que estamos usando), decidimos migrar de gestor de paquetes, antes usabamos npm, ahora usamos pnpm, en las referencias está la página para instalar pnpm
+
 Para dirigirte a la carpeta de back
-```console
+```Bash
 tu@computadora: ~ $ cd Project-Management-System-TechMahindra/project/node_runtime
 ```
 Y correr el comando
-```console
-tu@computadora: node_runtime $ npm install 
+```Bash
+tu@computadora: node_runtime $ pnpm install 
 ```
-Nota: También se usa el comando npm install en el frontend, dentro de my-app
+Nota: También se usa el comando pnpm install en el frontend, dentro de my-app
 - Configurar el .env con sus keys.
 - Crear y migrar la base de datos.
 - Correr el servidor.
 
 Para corrrer backend
-```console
+```Bash
 tu@computadora: ~ $ cd Project-Management-System-TechMahindra/project/node_runtime
-tu@computadora: node_runtime $ npm start
+tu@computadora: node_runtime $ pnpm start
 ```
 o si quieres correrlo en modo desarrollo
-```console
-tu@computadora: node_runtime $ npm run dev
+```Bash 
+tu@computadora: node_runtime $ pnpm run dev
 ```
 Para corre el WebSocket, en la misma carpeta que se arranca el backend, se corre este comando
-```console
-tu@computadora: node_runtime $ npm run ws
-
+```Bash
+tu@computadora: node_runtime $ pnpm run ws
 ```
 Para correr frontend
-```console
+```Bash
 tu@computadora: ~ $ cd Project-Management-System-TechMahindra/project/my-app
-tu@computadora: my-app $ npm start
+tu@computadora: my-app $ pnpm start
 ```
 - Verificar que el programa funcione correctamente.
 
@@ -73,5 +74,30 @@ Hacer testing en funciones que puedan ocasionar problemas. Hacer pruebas con un 
 - Token expired -> El usuario no puede autenticarse. Solución -> Verificar eque la key en el .env sea el mismo en todos los servicios desplegados.
 
 
+### Agente AI
+#### Una nota importante con el tema de la IA es que no es posible usarla con la api de forma gratuita, se tiene que pagar y preferimos implementar un agente de manera local con Ollama de momento.
+- Modelo de IA: llama3.2:3b
+- Requisitos:
+    - Una GPU con al menos 4GB de VRAM 
+    - 2 GB de espacio
+### Proceso de instalar ollama:
+Primero que nada tienes que tener ollama instalado, en referencias está el documento.
+
+Para checar que si tienes el programa tienes que poner el comando.
+```Bash
+tu@computadora: ~ $ Ollama --version
+```
+Y te debe mostrar que tienes una versión de ollama instalada
+
+Ahora, tienes que instalar el modelo, para ello tienes que poner el siguiente comando
+```Bash
+tu@computadora: ~ $ Ollama pull llama3.2:3b
+```
+Se estará instalando, espera que termine y listo, ya puedes usar tu agente 
+### ¿Cómo funciona? 
+Al ejecutar el script que tiene la IA, el programa llama al agente con un fetch http local, lee el prompt y te retorna una respuesta el agente.
+
 ### Referencias
 - websockets. (2024). ws [Repositorio de software]. GitHub. https://github.com/websockets/ws
+- Pnpm: https://pnpm.io/installation
+- Ollama: https://ollama.com/

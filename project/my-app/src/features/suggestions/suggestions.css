@@ -1,0 +1,148 @@
+/* suggestions.css */
+
+.suggestions-container {
+  padding: 2rem;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.suggestions-container h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+}
+
+/* Layout dos columnas */
+.suggestions-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+/* Tabla */
+.table-wrapper {
+  flex: 1;
+  background: #fff;
+  border-radius: 8px;
+  overflow-x: auto; 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  display:block
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+thead th {
+  text-align: left;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s;
+  overflow-y: scroll;
+
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background-color: #fafafa;
+}
+
+tbody td {
+  padding: 0.9rem 1.25rem;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.badge-red {
+  background-color: #fde8e8;
+  color: #c0392b;
+}
+
+.badge-yellow {
+  background-color: #fef9e7;
+  color: #b7950b;
+}
+
+.btn-chat {
+  padding: 0.35rem 1rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-chat:hover {
+  background-color: #f0f0f0;
+  border-color: #bbb;
+}
+
+.chat-panel {
+  width: 380px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  min-height: 300px;
+}
+
+.chat-panel .chat-placeholder {
+  color: #aaa;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.chat-content {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #333;
+  white-space: pre-wrap;
+  overflow-y: scroll;
+  max-height: 700px;
+}
+
+.loading-text {
+  color: #aaa;
+  font-size: 0.9rem;
+  animation: pulse 1.2s infinite;
+}
+
+.loading-text-projects{
+    color: #aaa;
+    font-size: 2rem;
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

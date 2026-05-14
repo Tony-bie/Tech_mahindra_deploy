@@ -19,6 +19,7 @@ import SprintBoard    from '../features/sprintBoard/SprintBoard';
 import WorkItemsPage  from '../features/work_items/WorkItemsPage';
 import CostsPage      from '../features/costs/CostsPage';
 import ProjectBlockersPage from '../features/projects/ProjectBlockersPage';
+import Suggestions from '../features/suggestions/suggestions';
 
 export default function AppRouter() {
     return (
@@ -146,6 +147,13 @@ export default function AppRouter() {
 
                         <Route path="/audit"       element={<AuditPage />} />
                         <Route path="/leaderboard" element={<LeaderboardPage />} />
+                        <Route path='/suggestions' 
+                            element={
+                            <ProtectedRoute roles={['pm', 'admin']}>
+                                <Suggestions />
+                            </ProtectedRoute>
+                            }
+                            />
                     </Route>
 
                     {/* Catch-all */}
