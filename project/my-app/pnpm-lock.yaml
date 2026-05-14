@@ -38,6 +38,10 @@ importers:
       ws:
         specifier: ^8.20.0
         version: 8.20.1
+    devDependencies:
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
 
 packages:
 
