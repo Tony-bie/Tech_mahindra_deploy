@@ -11,6 +11,7 @@ const sprintRoutes = require('./modules/sprints/sprints.routes')
 const SprintBoardRoutes = require('./modules/sprintBoard/sprintBoard.route')
 const costsRoutes = require('./modules/costs/costs.routes')
 const blockersRoutes = require('./modules/blockers/blockers.routes')
+const suggestionsRoutes = require('./modules/suggestions/suggestions.routes')
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/sprints', sprintRoutes)
 app.use('/sprintBoard', SprintBoardRoutes)
 app.use('/costs', costsRoutes)
 app.use('/blockers', blockersRoutes)
+app.use('/suggestions', suggestionsRoutes)
 
 app.use(errorHandler);
 
