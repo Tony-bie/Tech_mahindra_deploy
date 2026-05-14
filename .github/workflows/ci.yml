@@ -32,10 +32,10 @@ jobs:
           version: 11
 
       # Instala Node 20 y usa cache para no bajar npm cada vez
-      - name: Setup Node 20
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: project/my-app/pnpm-lock.yaml
 
@@ -71,11 +71,11 @@ jobs:
         with:
           version: 11
 
-      # Instala Node 20 con cache
-      - name: Setup Node 20
+      # Instala Node 22 con cache
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: project/node_runtime/pnpm-lock.yaml
 
