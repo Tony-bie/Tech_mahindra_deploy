@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import api from "../../config/api"
 import './suggestions.css'
+import ReactMarkdown from 'react-markdown'
 
 export default function Suggestions() {
     // eslint-disable-next-line
@@ -37,9 +38,13 @@ export default function Suggestions() {
 
             const model = 'llama3.2:3b';
             const message = [{ role: "user", 
-                                content: `Eres una IA asistente de Project Manager. El proyecto tiene estatus "${project.status}". 
+                                content: `  Responde siempre usando formato Markdown válido.
+                                            Usa **negritas** para títulos de sección.
+                                            Usa listas con "- " o "1. " para enumerar puntos.
+                                            Nunca uses saltos de línea simples como separadores de lista.
+                                            Eres una IA asistente de Project Manager. El proyecto tiene estatus "${project.status}". 
                                             Con base en estos datos: ${JSON.stringify(response.data.data)}, 
-                                            identifica la causa principal del problema y da UNA sugerencia concreta y breve de por dónde empezar a actuar. ` }];
+                                            identifica la causa principal del problema y da UNA sugerencia concreta y breve de por dónde empezar a actuar. `}];
 
             const responseClaude = await fetch('http://localhost:11434/api/chat', {
                 method: 'POST',
@@ -52,8 +57,9 @@ export default function Suggestions() {
             const reader = responseClaude.body.getReader();
             const decoder = new TextDecoder();
 
-
             setSelectedProject(response.data.data[0].project_name)
+
+            setLoading(false)
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -107,22 +113,16 @@ export default function Suggestions() {
                             <tr>
                                 <th>Nombre del proyecto</th>
                                 <th>Estado</th>
-                                <th>Chat</th>
                             </tr>
                             </thead>
                             <tbody>
                             {projectsStatus.all_data.map(project => (
-                                <tr key={project.id_project}>
+                                <tr key={project.id_project}  onClick={() => handleClick(project)}>
                                 <td>{project.project.project_name}</td>
                                 <td>
                                     <span className={`badge badge-${project.status}`}>
                                     {project.status}
                                     </span>
-                                </td>
-                                <td>
-                                    <button className="btn-chat" onClick={() => handleClick(project)}>
-                                    Seleccionar
-                                    </button>
                                 </td>
                                 </tr>
                             ))}
@@ -130,10 +130,12 @@ export default function Suggestions() {
                         </table>
                         </div>
                         <div className="chat-panel">
-                            {loading && <p className="loading-text">Analizando proyecto...</p>}
-                            {selectedProject && <h3>Analizando el proyecto: {selectedProject}</h3>}
+                            {loading && <p className="loading-text">Analizando proyecto {selectedProject}...</p>}
+                            {selectedProject && <h3 className="chat-title-project">Proyecto {selectedProject} analizado</h3>}
                             {chat[projectID]
-                                ? <p className="chat-content">{chat[projectID]}</p>
+                                ? <div className="chat-content">
+                                    <ReactMarkdown>{chat[projectID]}</ReactMarkdown>
+                                    </div>
                                 : !loading && <p className="chat-placeholder">Selecciona un proyecto para ver sugerencias</p>
                             }
                         </div>
