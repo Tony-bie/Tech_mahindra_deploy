@@ -1,5 +1,6 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getBacklogItemsForProject } from './viewerBacklogMock';
+import ProjectProgressCard from './ProjectProgressCard';
 import './ViewerProjectWorkspacePage.css';
 
 export default function ViewerProjectWorkspacePage() {
@@ -28,6 +29,8 @@ export default function ViewerProjectWorkspacePage() {
             </div>
 
             <div className="vpw-body">
+                <ProjectProgressCard projectId={id} />
+
                 <section className="vpw-hero-card">
                     <div>
                         <div className="vpw-kicker">Viewer project workspace</div>

@@ -9,6 +9,7 @@ const {
     addViewerToProject,
     removeViewerFromProject,
     getAssignableMembers,
+    getProjectProgress,
 } = require('./projects.controller');
 const { authUser, requireRole } = require('../../shared/middleware/auth');
 const { validate } = require('../../shared/validators/validate');
@@ -22,5 +23,8 @@ router.get('/:id/viewers', authUser, requireRole('admin', 'pm'), getProjectViewe
 router.get('/:id/assignable', authUser, requireRole('admin', 'pm'), getAssignableMembers);
 router.post('/:id/viewers', authUser, requireRole('admin', 'pm'), validate(addViewerSchema), addViewerToProject);
 router.delete('/:id/viewers/:viewer_id', authUser, requireRole('admin', 'pm'), removeViewerFromProject);
+
+// HU-14 — avance real vs esperado (todos los roles con acceso al proyecto)
+router.get('/:id/progress', authUser, getProjectProgress);
 
 module.exports = router;

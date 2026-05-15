@@ -477,6 +477,98 @@ async function getAssignableMembers(req, res) {
     }
 }
 
+// =====================================================
+// GET /projects/:id/progress  — HU-14
+// Devuelve avance real, avance esperado y desviación.
+//   avance_real     = SP done / estimated_sp
+//   avance_esperado = SP_estimated de sprints vencidos / estimated_sp
+//   desviacion      = avance_real - avance_esperado
+// RBAC: admin → todos; pm → solo sus proyectos; viewer → solo los suyos
+// =====================================================
+async function getProjectProgress(req, res) {
+    try {
+        const projectId = parseInt(req.params.id);
+        const { id_user, role } = req.user;
+
+        const { data: project, error: projErr } = await supabase
+            .from('project')
+            .select('id_project, id_pm, estimated_sp')
+            .eq('id_project', projectId)
+            .single();
+
+        if (projErr || !project) {
+            return res.status(404).json({ message: 'Proyecto no encontrado' });
+        }
+
+        if (role === 'pm' && project.id_pm !== id_user) {
+            return res.status(403).json({ message: 'No tienes acceso a este proyecto' });
+        }
+        if (role === 'viewer') {
+            const { data: membership } = await supabase
+                .from('project_member')
+                .select('id_member')
+                .eq('id_project', projectId)
+                .eq('id_user', id_user)
+                .limit(1);
+            if (!membership || membership.length === 0) {
+                return res.status(403).json({ message: 'No tienes acceso a este proyecto' });
+            }
+        }
+
+        const { data: sprints, error: sprintErr } = await supabase
+            .from('sprint')
+            .select('id_sprint, SP_estimated, deadline')
+            .eq('id_project', projectId);
+
+        if (sprintErr) {
+            return res.status(500).json({ message: 'Error cargando sprints', error: sprintErr.message });
+        }
+
+        const sprintIds = (sprints || []).map(s => s.id_sprint);
+
+        // SP completados: sum de work_items done
+        let sp_completados = 0;
+        if (sprintIds.length > 0) {
+            const { data: doneItems } = await supabase
+                .from('work_item')
+                .select('story_points')
+                .in('id_sprint', sprintIds)
+                .eq('status', 'done');
+            sp_completados = (doneItems || []).reduce((acc, item) => acc + (item.story_points || 0), 0);
+        }
+
+        // SP totales: estimated_sp del proyecto; fallback a suma de todos los work_items
+        let sp_totales = project.estimated_sp || 0;
+        if (!sp_totales && sprintIds.length > 0) {
+            const { data: allItems } = await supabase
+                .from('work_item')
+                .select('story_points')
+                .in('id_sprint', sprintIds);
+            sp_totales = (allItems || []).reduce((acc, item) => acc + (item.story_points || 0), 0);
+        }
+
+        // SP esperados: sprints con deadline <= ahora
+        const now = new Date().toISOString();
+        const pastSprints = (sprints || []).filter(s => s.deadline && s.deadline <= now);
+        const sp_esperados = pastSprints.reduce((acc, s) => acc + (s.SP_estimated || 0), 0);
+
+        const avance_real     = sp_totales > 0 ? parseFloat(((sp_completados / sp_totales) * 100).toFixed(2)) : 0;
+        const avance_esperado = sp_totales > 0 ? parseFloat(((sp_esperados    / sp_totales) * 100).toFixed(2)) : 0;
+        const desviacion      = parseFloat((avance_real - avance_esperado).toFixed(2));
+
+        return res.status(200).json({
+            avance_real,
+            avance_esperado,
+            desviacion,
+            sp_completados,
+            sp_esperados,
+            sp_totales,
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     getProjects,
     getManagers,
@@ -486,4 +578,5 @@ module.exports = {
     addViewerToProject,
     removeViewerFromProject,
     getAssignableMembers,
+    getProjectProgress,
 };
