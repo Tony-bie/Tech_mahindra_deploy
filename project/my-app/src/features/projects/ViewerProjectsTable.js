@@ -3,26 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import './ViewerProjectsTable.css';
 
-/* ─── Mock helpers ─────────────────────────────────────────────────── */
-const MOCK_PROGRESS  = [42, 55, 68, 37, 74, 61];
-const MOCK_EXPECTED  = [68, 62, 70, 50, 77, 64];
-const MOCK_RISKS     = [4, 2, 1, 5, 0, 3];
-const MOCK_COST      = ['$284,500', '$412,000', '$198,750', '$530,000', '$312,400', '$275,900'];
-
-function getVisualMetrics(index) {
-    const progress    = MOCK_PROGRESS[index % MOCK_PROGRESS.length];
-    const expected    = MOCK_EXPECTED[index % MOCK_EXPECTED.length];
-    const deviation   = progress - expected;
-    const activeRisks = MOCK_RISKS[index % MOCK_RISKS.length];
-    const cost        = MOCK_COST[index % MOCK_COST.length];
-
-    let semaphore = { label: 'Verde', color: '#2E7D32', bg: '#E7F6EA' };
-    if (activeRisks >= 4 || deviation <= -20)
-        semaphore = { label: 'Rojo',     color: '#B71C1C', bg: '#FDECEC' };
-    else if (activeRisks >= 2 || deviation <= -8)
-        semaphore = { label: 'Amarillo', color: '#8A5A00', bg: '#FFF3D9' };
-
-    return { progress, expected, deviation, activeRisks, semaphore, cost };
+/* Semáforo basado en desviación real (lógica completa en Phase C / RF-11) */
+function getSemaphore(prog) {
+    if (!prog) return { label: '—', color: '#AAA', bg: '#F5F5F4' };
+    const dev = prog.desviacion;
+    if (dev <= -20) return { label: 'Rojo',     color: '#B71C1C', bg: '#FDECEC' };
+    if (dev <= -5)  return { label: 'Amarillo', color: '#8A5A00', bg: '#FFF3D9' };
+    return               { label: 'Verde',    color: '#2E7D32', bg: '#E7F6EA' };
 }
 
 /* ─── Viewer Management Modal ───────────────────────────────────────── */
@@ -173,7 +160,8 @@ export default function ViewerProjectsTable({ user }) {
     const [query,        setQuery]        = useState('');
     const [loading,      setLoading]      = useState(true);
     const [error,        setError]        = useState('');
-    const [viewersModal, setViewersModal] = useState(null); // project | null
+    const [viewersModal, setViewersModal] = useState(null);
+    const [progressMap,  setProgressMap]  = useState({}); // { [id_project]: data | null }
 
     useEffect(() => {
         async function loadProjects() {
@@ -186,7 +174,21 @@ export default function ViewerProjectsTable({ user }) {
                     setError(data.message || 'No se pudieron cargar los proyectos');
                     return;
                 }
-                setProjects(Array.isArray(data) ? data : []);
+                const list = Array.isArray(data) ? data : [];
+                setProjects(list);
+
+                // Fetch progreso de todos los proyectos en paralelo
+                const entries = await Promise.all(
+                    list.map(async (p) => {
+                        try {
+                            const { res: pr, data: pd } = await api.get(`/projects/${p.id_project}/progress`);
+                            return [p.id_project, pr.ok ? pd : null];
+                        } catch {
+                            return [p.id_project, null];
+                        }
+                    })
+                );
+                setProgressMap(Object.fromEntries(entries));
             } catch {
                 setProjects([]);
                 setError('Error de conexión con el servidor');
@@ -255,11 +257,17 @@ export default function ViewerProjectsTable({ user }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filtered.map((project, index) => {
-                                    const visual         = getVisualMetrics(index);
-                                    const deviationClass = visual.deviation < 0 ? 'vpt-deviation-negative' : 'vpt-deviation-positive';
-                                    const progressColor  = visual.deviation < -10 ? '#C62828' : '#E07A00';
-                                    const risksClass     = visual.activeRisks > 0 ? 'vpt-risks-active' : 'vpt-risks-none';
+                                {filtered.map((project) => {
+                                    const prog           = progressMap[project.id_project] ?? null;
+                                    const semaphore      = getSemaphore(prog);
+                                    const deviation      = prog?.desviacion ?? null;
+                                    const deviationClass = deviation === null ? '' : deviation < 0 ? 'vpt-deviation-negative' : 'vpt-deviation-positive';
+                                    const progressColor  = deviation !== null && deviation < -10 ? '#C62828' : '#E07A00';
+                                    const deviacionStr   = deviation === null
+                                        ? '—'
+                                        : deviation > 0
+                                            ? `+${deviation.toFixed(2)}%`
+                                            : `${deviation.toFixed(2)}%`;
 
                                     return (
                                         <tr key={project.id_project}>
@@ -275,31 +283,27 @@ export default function ViewerProjectsTable({ user }) {
                                                         <div
                                                             className="vpt-progress-fill"
                                                             style={{
-                                                                width: `${visual.progress}%`,
+                                                                width: `${prog?.avance_real ?? 0}%`,
                                                                 '--vpt-progress-color': progressColor,
                                                             }}
                                                         />
                                                     </div>
-                                                    <span>{visual.progress}%</span>
+                                                    <span>{prog ? `${prog.avance_real.toFixed(2)}%` : '—'}</span>
                                                 </div>
                                             </td>
-                                            <td className="vpt-td">{visual.expected}%</td>
-                                            <td className={`vpt-td ${deviationClass}`}>
-                                                {visual.deviation > 0
-                                                    ? `+${visual.deviation.toFixed(2)}%`
-                                                    : `${visual.deviation.toFixed(2)}%`}
-                                            </td>
-                                            <td className="vpt-td">{visual.cost}</td>
-                                            <td className={`vpt-td ${risksClass}`}>{visual.activeRisks}</td>
+                                            <td className="vpt-td">{prog ? `${prog.avance_esperado.toFixed(2)}%` : '—'}</td>
+                                            <td className={`vpt-td ${deviationClass}`}>{deviacionStr}</td>
+                                            <td className="vpt-td" style={{ color: '#AAA' }}>—</td>
+                                            <td className="vpt-td" style={{ color: '#AAA' }}>—</td>
                                             <td className="vpt-td">
                                                 <span
                                                     className="vpt-semaphore-pill"
                                                     style={{
-                                                        '--vpt-semaphore-color': visual.semaphore.color,
-                                                        '--vpt-semaphore-bg':    visual.semaphore.bg,
+                                                        '--vpt-semaphore-color': semaphore.color,
+                                                        '--vpt-semaphore-bg':    semaphore.bg,
                                                     }}
                                                 >
-                                                    {visual.semaphore.label}
+                                                    {semaphore.label}
                                                 </span>
                                             </td>
                                             <td className="vpt-td">

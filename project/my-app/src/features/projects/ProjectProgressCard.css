@@ -1,0 +1,207 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+
+.ppc-card {
+    background: #FFFFFF;
+    border: 1px solid #E7E4DD;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+
+/* ── Header ─────────────────────────────────────── */
+.ppc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.ppc-kicker {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8A8A8A;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.ppc-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2C2C2C;
+}
+
+.ppc-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.ppc-badge--ahead  { background: #DCFCE7; color: #15803D; }
+.ppc-badge--behind { background: #FFF1F2; color: #D92F47; }
+.ppc-badge--ontime { background: #F1F5F9; color: #475569; }
+
+/* ── Body layout ────────────────────────────────── */
+.ppc-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+}
+
+/* ── Progress bars ──────────────────────────────── */
+.ppc-bars {
+    display: grid;
+    gap: 14px;
+}
+
+.ppc-bar-row {
+    display: grid;
+    grid-template-columns: 148px 1fr 58px;
+    align-items: center;
+    gap: 12px;
+}
+
+.ppc-bar-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4A4A4A;
+    white-space: nowrap;
+}
+
+.ppc-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ppc-dot--real     { background: #1A1A1A; }
+.ppc-dot--expected { background: #C5C0B8; }
+
+.ppc-track {
+    height: 10px;
+    background: #EDEAE3;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.ppc-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ppc-fill--real     { background: #1A1A1A; }
+.ppc-fill--expected { background: #C5C0B8; }
+
+.ppc-bar-pct {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: #444;
+    text-align: right;
+}
+
+/* ── Metrics panel ──────────────────────────────── */
+.ppc-metrics {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    border-left: 1px solid #EDEAE3;
+    padding-left: 32px;
+}
+
+.ppc-metric {
+    display: grid;
+    gap: 4px;
+    min-width: 88px;
+}
+
+.ppc-metric-label {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #8A8A8A;
+    font-weight: 700;
+}
+
+.ppc-metric-num {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.ppc-metric-num--real     { color: #1A1A1A; }
+.ppc-metric-num--expected { color: #A09C94; }
+.ppc-metric-num--ahead    { color: #16A34A; }
+.ppc-metric-num--behind   { color: #D92F47; }
+.ppc-metric-num--ontime   { color: #64748B; }
+
+.ppc-metric-sub {
+    font-size: 11px;
+    color: #AAA;
+    line-height: 1.4;
+}
+
+.ppc-metric-divider {
+    width: 1px;
+    height: 52px;
+    background: #E7E4DD;
+    flex-shrink: 0;
+}
+
+/* ── Skeleton ───────────────────────────────────── */
+.ppc-skeleton {
+    height: 96px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #F5F5F4 25%, #EDEAE3 50%, #F5F5F4 75%);
+    background-size: 200% 100%;
+    animation: ppc-shimmer 1.4s infinite;
+}
+
+@keyframes ppc-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 960px) {
+    .ppc-body {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .ppc-metrics {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid #EDEAE3;
+        padding-top: 18px;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 620px) {
+    .ppc-bar-row {
+        grid-template-columns: 110px 1fr 46px;
+    }
+
+    .ppc-metrics {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .ppc-metric-divider { display: none; }
+
+    .ppc-metric-num { font-size: 18px; }
+}
