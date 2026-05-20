@@ -9,10 +9,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "ws": "node WsServer.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@google/genai": "^2.4.0",
     "@supabase/supabase-js": "^2.99.1",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",

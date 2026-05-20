@@ -10,8 +10,6 @@ server.on('connection', (socket) => {
     socket.on('message', (message) => {
         try{
             const mensaje = JSON.parse(message.toString()) 
-            console.log(message)
-            console.log(mensaje)
 
             server.clients.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
@@ -41,3 +39,4 @@ server.on('listening', () => {
     console.log('WebSocket server is running on ws://localhost:8081');
 })
 
+module.exports = server;
