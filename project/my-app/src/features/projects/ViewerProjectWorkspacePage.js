@@ -33,7 +33,7 @@ export default function ViewerProjectWorkspacePage() {
 
                 <section className="vpw-hero-card">
                     <div>
-                        <div className="vpw-kicker">Viewer project workspace</div>
+                        <div className="vpw-kicker">Espacio de trabajo</div>
                         <h1 className="vpw-title">{projectName}</h1>
                         <p className="vpw-subtitle">
                             Vista visual del proyecto para revisar avance, backlog y bloqueadores sin tocar backend todavía.
@@ -44,31 +44,31 @@ export default function ViewerProjectWorkspacePage() {
                         <button className="vpw-primary-btn" onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}>
                             Ver backlog
                         </button>
-                        <div className="vpw-hero-tag">Sprint 4 active</div>
+                        <div className="vpw-hero-tag">Sprint 4 activo</div>
                     </div>
                 </section>
 
                 <section className="vpw-stats-grid">
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Backlog items</span>
+                        <span className="vpw-stat-label">Ítems en backlog</span>
                         <strong className="vpw-stat-value">{backlogItems.length}</strong>
-                        <span className="vpw-stat-hint">Items visibles para el viewer</span>
+                        <span className="vpw-stat-hint">Ítems visibles para el viewer</span>
                     </div>
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Blocked items</span>
+                        <span className="vpw-stat-label">Ítems bloqueados</span>
                         <strong className="vpw-stat-value-danger">{blockedItems}</strong>
                         <span className="vpw-stat-hint">Bloqueadores o implicaciones activas</span>
                     </div>
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Visual progress</span>
+                        <span className="vpw-stat-label">Progreso visual</span>
                         <strong className="vpw-stat-value">{progress}%</strong>
                         <span className="vpw-progress-track">
                             <span className="vpw-progress-fill" style={{ width: `${progress}%` }} />
                         </span>
                     </div>
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Current status</span>
-                        <strong className="vpw-stat-value">In review</strong>
+                        <span className="vpw-stat-label">Estado actual</span>
+                        <strong className="vpw-stat-value">En revisión</strong>
                         <span className="vpw-stat-hint">Solo representación visual por ahora</span>
                     </div>
                 </section>
@@ -78,7 +78,7 @@ export default function ViewerProjectWorkspacePage() {
                         <div className="vpw-card">
                             <div className="vpw-card-header">
                                 <div>
-                                    <div className="vpw-section-label">Quick access</div>
+                                    <div className="vpw-section-label">Acceso rápido</div>
                                     <div className="vpw-card-title">Entradas principales del proyecto</div>
                                 </div>
                             </div>
@@ -88,13 +88,13 @@ export default function ViewerProjectWorkspacePage() {
                                     Backlog
                                 </button>
                                 <button className="vpw-quick-action" onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}>
-                                    Work item blockers
+                                    Bloqueadores
                                 </button>
                                 <button className="vpw-quick-action" onClick={() => navigate('/leaderboard')}>
                                     Leaderboard
                                 </button>
                                 <button className="vpw-quick-action" onClick={() => navigate('/audit')}>
-                                    Audit trail
+                                    Auditoría
                                 </button>
                             </div>
                         </div>
@@ -102,7 +102,7 @@ export default function ViewerProjectWorkspacePage() {
                         <div className="vpw-card">
                             <div className="vpw-card-header">
                                 <div>
-                                    <div className="vpw-section-label">Backlog snapshot</div>
+                                    <div className="vpw-section-label">Resumen del backlog</div>
                                     <div className="vpw-card-title">Resumen rápido de ítems</div>
                                 </div>
                             </div>
@@ -115,7 +115,7 @@ export default function ViewerProjectWorkspacePage() {
                                             <div className="vpw-snapshot-meta">{item.type} · {item.assignee} · {item.storyPoints} SP</div>
                                         </div>
                                         <button className="vpw-snapshot-btn" onClick={() => navigate(`/projects/${id}/backlog/${item.id}`, { state: { projectName } })}>
-                                            View
+                                            Ver
                                         </button>
                                     </div>
                                 ))}
@@ -125,16 +125,16 @@ export default function ViewerProjectWorkspacePage() {
 
                     <aside className="vpw-side-column">
                         <div className="vpw-side-card">
-                            <div className="vpw-section-label">Project focus</div>
+                            <div className="vpw-section-label">Foco del proyecto</div>
                             <div className="vpw-side-text">
                                 Esta pantalla es solo visual. La interacción detallada de bloqueos vive dentro del detalle del work item.
                             </div>
                         </div>
 
                         <div className="vpw-side-card">
-                            <div className="vpw-section-label">Alert</div>
+                            <div className="vpw-section-label">Alerta</div>
                             <div className="vpw-alert-box">
-                                {blockedItems > 0 ? `${blockedItems} item(s) tienen bloqueadores activos.` : 'No active blockers.'}
+                                {blockedItems > 0 ? `${blockedItems} ítem(s) tienen bloqueadores activos.` : 'Sin bloqueadores activos.'}
                             </div>
                         </div>
                     </aside>
