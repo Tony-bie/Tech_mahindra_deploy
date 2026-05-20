@@ -304,4 +304,117 @@ async function getAdminDashboard(req, res) {
     }
 }
 
-module.exports = { getAdminDashboard };
+// ─── GET /dashboard/leaderboard ──────────────────────────────────────────────
+// Ranking semanal del equipo del usuario autenticado.
+// "Equipo" = todos los usuarios que comparten al menos un proyecto con el caller.
+// Puntos = story_points × gamification_weight  (+25 % si cerrado a tiempo).
+// Semana = lunes 00:00 → domingo 23:59 UTC del momento de la petición.
+async function getLeaderboard(req, res) {
+    try {
+        const currentUserId = req.user.id_user;
+
+        // ── Semana actual (lunes–domingo UTC) ────────────────────────────────
+        const now = new Date();
+        const dow = now.getUTCDay(); // 0=dom … 6=sáb
+        const monday = new Date(now);
+        monday.setUTCDate(now.getUTCDate() - (dow === 0 ? 6 : dow - 1));
+        monday.setUTCHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setUTCDate(monday.getUTCDate() + 6);
+        sunday.setUTCHours(23, 59, 59, 999);
+
+        // ── Proyectos del usuario ────────────────────────────────────────────
+        const { data: myMemberships, error: memErr } = await supabase
+            .from('project_member')
+            .select('id_project')
+            .eq('id_user', currentUserId);
+        if (memErr) return res.status(500).json({ error: memErr.message });
+
+        const myProjectIds = (myMemberships || []).map(m => m.id_project);
+        if (myProjectIds.length === 0) {
+            return res.status(200).json({ ranking: [], my_position: null,
+                week_start: monday.toISOString().slice(0, 10),
+                week_end:   sunday.toISOString().slice(0, 10) });
+        }
+
+        // ── Todos los miembros del equipo ────────────────────────────────────
+        const { data: allMembers, error: allMemErr } = await supabase
+            .from('project_member')
+            .select('id_user')
+            .in('id_project', myProjectIds);
+        if (allMemErr) return res.status(500).json({ error: allMemErr.message });
+
+        const teamUserIds = [...new Set((allMembers || []).map(m => m.id_user))];
+
+        // ── Info de usuarios ─────────────────────────────────────────────────
+        const { data: users, error: usersErr } = await supabase
+            .from('users')
+            .select('id_user, username, full_name')
+            .in('id_user', teamUserIds);
+        if (usersErr) return res.status(500).json({ error: usersErr.message });
+
+        // ── Work items cerrados esta semana por miembros del equipo ──────────
+        const { data: doneItems, error: wiErr } = await supabase
+            .from('work_item')
+            .select('assignee_id, story_points, gamification_weight, end_date, updated_at')
+            .eq('status', 'done')
+            .in('assignee_id', teamUserIds)
+            .gte('updated_at', monday.toISOString())
+            .lte('updated_at', sunday.toISOString());
+        if (wiErr) return res.status(500).json({ error: wiErr.message });
+
+        // ── Calcular puntos por usuario ──────────────────────────────────────
+        const statsMap = {};
+        for (const uid of teamUserIds) {
+            statsMap[uid] = { items_closed: 0, base_points: 0, bonus_points: 0, on_time_count: 0 };
+        }
+
+        for (const wi of (doneItems || [])) {
+            const uid = wi.assignee_id;
+            if (!statsMap[uid]) continue;
+            const base  = (wi.story_points || 0) * (wi.gamification_weight || 1);
+            const onTime = wi.end_date && new Date(wi.updated_at) <= new Date(wi.end_date);
+            const bonus  = onTime ? Math.round(base * 0.25) : 0;
+            statsMap[uid].items_closed  += 1;
+            statsMap[uid].base_points   += base;
+            statsMap[uid].bonus_points  += bonus;
+            if (onTime) statsMap[uid].on_time_count += 1;
+        }
+
+        // ── Armar ranking ordenado ───────────────────────────────────────────
+        const userById = Object.fromEntries((users || []).map(u => [u.id_user, u]));
+        const ranking = teamUserIds
+            .map(uid => {
+                const s = statsMap[uid];
+                const total = s.base_points + s.bonus_points;
+                const on_time_rate = s.items_closed > 0
+                    ? Math.round((s.on_time_count / s.items_closed) * 100)
+                    : 0;
+                return {
+                    id_user:       uid,
+                    username:      userById[uid]?.username  || `User ${uid}`,
+                    full_name:     userById[uid]?.full_name || null,
+                    weekly_points: total,
+                    base_points:   s.base_points,
+                    bonus_points:  s.bonus_points,
+                    items_closed:  s.items_closed,
+                    on_time_rate,
+                };
+            })
+            .sort((a, b) => b.weekly_points - a.weekly_points || a.username.localeCompare(b.username))
+            .map((entry, idx) => ({ ...entry, rank: idx + 1 }));
+
+        const my_position = ranking.find(r => r.id_user === currentUserId) || null;
+
+        return res.status(200).json({
+            ranking,
+            my_position,
+            week_start: monday.toISOString().slice(0, 10),
+            week_end:   sunday.toISOString().slice(0, 10),
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { getAdminDashboard, getLeaderboard };
