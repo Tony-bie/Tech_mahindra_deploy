@@ -1,8 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuthContext } from '../../shared/context/AuthContext';
 import api from '../../config/api';
 import './ViewerWorkItemDetailPage.css';
+
+// Supabase devuelve TIMESTAMP sin 'Z'; forzar UTC antes de formatear
+function fmtMty(ts) {
+    if (!ts) return '—';
+    const utc = /[Z+]/.test(ts) ? ts : ts + 'Z';
+    return new Date(utc).toLocaleString('es-MX', {
+        timeZone: 'America/Monterrey',
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true,
+    });
+}
 
 // ── Helpers (antes venían del mock) ──────────────────────────────────────────
 function getStatusBadgeColors(status) {
@@ -69,11 +80,13 @@ export default function ViewerWorkItemDetailPage() {
     const projectName = location.state?.projectName || `Proyecto ${id}`;
 
     // Item real pasado desde ViewerProjectBacklogPage via location.state
-    const workItem = adaptItem(location.state?.item, id);
+    const rawItem = location.state?.item;
+    const workItem = useMemo(() => adaptItem(rawItem, id), [rawItem, id]);
     const isMyItem = workItem?.assigneeId === user?.id;
     const [currentStatus, setCurrentStatus] = useState(normalizeStatus(workItem?.status));
     const [blockers, setBlockers] = useState([]);
     const [loadingBlockers, setLoadingBlockers] = useState(true);
+    const [resolvingId, setResolvingId] = useState(null);
     const [form, setForm] = useState({
         kind: 'blocker',
         description: '',
@@ -102,7 +115,7 @@ export default function ViewerWorkItemDetailPage() {
             try {
                 const { res, data } = await api.get(`/blockers?work_item_id=${workItem.id}`);
                 if (res.ok) {
-                    setBlockers(data.blockers || []);
+                    setBlockers((data.blockers || []).filter(b => !b.resolved_at));
                 } else {
                     console.error('Error cargando bloqueadores:', data.message);
                 }
@@ -116,17 +129,6 @@ export default function ViewerWorkItemDetailPage() {
         loadBlockers();
     }, [workItem?.id]);
 
-    useEffect(() => {
-        setCurrentStatus(normalizeStatus(workItem?.status));
-        setTimeline([
-            {
-                id: 'created',
-                title: 'Ítem de trabajo creado',
-                detail: 'Agregado al backlog del Sprint 4 para el proyecto viewer.',
-                time: 'Hoy · 08:10',
-            },
-        ]);
-    }, [workItem]);
 
     if (!workItem) {
         return (
@@ -154,8 +156,10 @@ export default function ViewerWorkItemDetailPage() {
         event.preventDefault();
 
         const nextErrors = {};
-        if (!form.description.trim()) nextErrors.description = 'La descripción es obligatoria.';
-        if (!form.impact.trim()) nextErrors.impact = 'El impacto es obligatorio.';
+        if (form.description.trim().length < 10)
+            nextErrors.description = 'La descripción debe tener al menos 10 caracteres.';
+        if (form.impact.trim().length < 10)
+            nextErrors.impact = 'El impacto debe tener al menos 10 caracteres.';
 
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors);
@@ -195,6 +199,10 @@ export default function ViewerWorkItemDetailPage() {
                 // Limpiar formulario
                 setForm({ kind: 'blocker', description: '', impact: '', severity: 'medium' });
                 setErrors({});
+            } else if (data.errors && data.errors.length > 0) {
+                const fieldErrors = {};
+                data.errors.forEach(({ field, message }) => { fieldErrors[field] = message; });
+                setErrors(fieldErrors);
             } else {
                 setErrors({ submit: data.message || 'Error creando el bloqueador' });
             }
@@ -203,6 +211,22 @@ export default function ViewerWorkItemDetailPage() {
             console.error('Error enviando bloqueador:', error);
         } finally {
             setSubmitting(false);
+        }
+    }
+
+    async function handleResolveBlocker(blockerId) {
+        setResolvingId(blockerId);
+        try {
+            const { res, data } = await api.patch(`/blockers/${blockerId}/resolve`, {});
+            if (res.ok) {
+                setBlockers(prev => prev.filter(b => b.id_blocker !== blockerId));
+            } else {
+                console.error('Error finalizando bloqueador:', data.message);
+            }
+        } catch (err) {
+            console.error('Error de conexión:', err);
+        } finally {
+            setResolvingId(null);
         }
     }
 
@@ -229,10 +253,6 @@ export default function ViewerWorkItemDetailPage() {
                         <p className="vwid-description">{workItem.description}</p>
                     </div>
 
-                    <div className="vwid-header-meta">
-                        <div className="vwid-meta-chip" style={{ color: type.color, backgroundColor: type.bg }}>{typeLabelMap[workItem.type] || workItem.type}</div>
-                        <div className="vwid-meta-chip" style={{ color: status.color, backgroundColor: status.bg }}>{statusLabel(currentStatus)}</div>
-                    </div>
                 </div>
 
                 <div className="vwid-grid">
@@ -312,19 +332,44 @@ export default function ViewerWorkItemDetailPage() {
                                             const statusBg = blocker.approval_status === 'pending' ? '#FFF3D9' :
                                                 blocker.approval_status === 'approved' ? '#E7F6EA' : '#FDECEC';
 
+                                            const isResolved = !!blocker.resolved_at;
                                             return (
-                                                <div key={blocker.id_blocker} className="vwid-active-blocker" data-severity={blocker.severity} style={{ marginBottom: 12 }}>
+                                                <div key={blocker.id_blocker} className="vwid-active-blocker" data-severity={blocker.severity} style={{ marginBottom: 12, opacity: isResolved ? 0.7 : 1 }}>
                                                     <div className="vwid-active-blocker-head">
                                                         <span className="vwid-active-badge">{blocker.kind === 'implication' ? 'Implicación' : 'Bloqueador'}</span>
-                                                        <span className="vwid-date">{new Date(blocker.created_at).toLocaleDateString('es-ES')} · {new Date(blocker.created_at).toLocaleTimeString('es-ES')}</span>
+                                                        <span className="vwid-date">{fmtMty(blocker.created_at)}</span>
                                                     </div>
                                                     <div className="vwid-blocker-title">{blocker.description}</div>
                                                     <div className="vwid-blocker-impact">{blocker.impact}</div>
                                                     <div className="vwid-blocker-footer">
-                                                        <span className="vwid-meta-chip" style={{ color: blockerSeverity.color, backgroundColor: blockerSeverity.bg }}>{blockerSeverity.label}</span>
-                                                        <span className="vwid-meta-chip" style={{ color: statusColor, backgroundColor: statusBg }}>{approvalLabel}</span>
-                                                        {blocker.approval_status === 'rejected' && blocker.rejected_reason && (
-                                                            <span style={{ fontSize: 11, color: '#B71C1C' }}>Razón: {blocker.rejected_reason}</span>
+                                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                                                            <span className="vwid-meta-chip" style={{ color: blockerSeverity.color, backgroundColor: blockerSeverity.bg }}>{blockerSeverity.label}</span>
+                                                            <span className="vwid-meta-chip" style={{ color: statusColor, backgroundColor: statusBg }}>
+                                                                {isResolved ? 'Finalizado' : approvalLabel}
+                                                            </span>
+                                                            {blocker.approval_status === 'approved' && blocker.deadline && !isResolved && (
+                                                                <span style={{ fontSize: 11, color: '#8A5A00' }}>
+                                                                    Límite: {new Date(blocker.deadline).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                </span>
+                                                            )}
+                                                            {isResolved && (
+                                                                <span style={{ fontSize: 11, color: '#2E7D32' }}>
+                                                                    Resuelto: {new Date(blocker.resolved_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                </span>
+                                                            )}
+                                                            {blocker.approval_status === 'rejected' && blocker.rejected_reason && (
+                                                                <span style={{ fontSize: 11, color: '#B71C1C' }}>Razón: {blocker.rejected_reason}</span>
+                                                            )}
+                                                        </div>
+                                                        {blocker.approval_status === 'approved' && !isResolved && (
+                                                            <button
+                                                                className="vwid-secondary-btn"
+                                                                style={{ fontSize: 11, height: 28, padding: '0 12px', borderColor: '#3C9A57', color: '#3C9A57' }}
+                                                                disabled={resolvingId === blocker.id_blocker}
+                                                                onClick={() => handleResolveBlocker(blocker.id_blocker)}
+                                                            >
+                                                                {resolvingId === blocker.id_blocker ? 'Finalizando...' : 'Finalizar'}
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -386,8 +431,14 @@ export default function ViewerWorkItemDetailPage() {
                                             }}
                                             placeholder="¿Qué está bloqueando el avance? Sé específico."
                                             disabled={submitting}
+                                            style={errors.description ? { borderColor: '#D92F47' } : {}}
                                         />
-                                        {errors.description && <span className="vwid-error-text">{errors.description}</span>}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            {errors.description ? <span className="vwid-error-text">{errors.description}</span> : <span />}
+                                            <span style={{ fontSize: 10, color: form.description.trim().length < 10 ? '#D92F47' : '#AAA' }}>
+                                                {form.description.trim().length}/10 mín
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div className="vwid-field">
@@ -401,8 +452,14 @@ export default function ViewerWorkItemDetailPage() {
                                             }}
                                             placeholder="¿Qué pasará si esto no se resuelve?"
                                             disabled={submitting}
+                                            style={errors.impact ? { borderColor: '#D92F47' } : {}}
                                         />
-                                        {errors.impact && <span className="vwid-error-text">{errors.impact}</span>}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            {errors.impact ? <span className="vwid-error-text">{errors.impact}</span> : <span />}
+                                            <span style={{ fontSize: 10, color: form.impact.trim().length < 10 ? '#D92F47' : '#AAA' }}>
+                                                {form.impact.trim().length}/10 mín
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div className="vwid-form-actions">

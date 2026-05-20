@@ -556,6 +556,22 @@ async function getProjectProgress(req, res) {
         const avance_esperado = sp_totales > 0 ? parseFloat(((sp_esperados    / sp_totales) * 100).toFixed(2)) : 0;
         const desviacion      = parseFloat((avance_real - avance_esperado).toFixed(2));
 
+        // Costo aprobado: suma de spends aprobados ligados al presupuesto del proyecto
+        let costo_aprobado = 0;
+        const { data: budget } = await supabase
+            .from('budget')
+            .select('id_budget')
+            .eq('id_project', projectId)
+            .limit(1);
+        if (budget && budget.length > 0) {
+            const { data: approvedSpends } = await supabase
+                .from('spend')
+                .select('spendmoney')
+                .eq('id_budget', budget[0].id_budget)
+                .eq('status', 'approved');
+            costo_aprobado = (approvedSpends || []).reduce((acc, s) => acc + (s.spendmoney || 0), 0);
+        }
+
         return res.status(200).json({
             avance_real,
             avance_esperado,
@@ -563,6 +579,7 @@ async function getProjectProgress(req, res) {
             sp_completados,
             sp_esperados,
             sp_totales,
+            costo_aprobado,
         });
     } catch (error) {
         return res.status(500).json({ error: error.message });

@@ -8,8 +8,6 @@ import TeamSection from './TeamSection';
 import CostsSection from './CostsSection';
 import SprintsSection from './SprintsSection';
 import UpcomingSection from './UpcomingSection';
-import ProjectsTable from './ProjectsTable';
-
 export default function AdminDashboard() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -64,7 +62,7 @@ export default function AdminDashboard() {
                         <CostsSection     charts={data.charts} />
                         <SprintsSection   charts={data.charts} />
                         <UpcomingSection  lists={data.lists} />
-                        <ProjectsTable    projects={data.projects} />
+
                     </>
                 )}
             </div>

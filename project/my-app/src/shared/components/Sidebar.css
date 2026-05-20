@@ -5,13 +5,13 @@
 /*  Variables locales  */
 .sb-sidebar {
   --sb-bg:            #1e1b16;
-  --sb-bg-hover:      #26231d;
+  --sb-bg-hover:      #2d2923;
   --sb-bg-active:     #cc0000;
   --sb-bg-footer:     #17140f;
-  --sb-border:        rgba(255, 255, 255, 0.07);
+  --sb-border:        rgba(255, 255, 255, 0.11);
   --sb-text-primary:  #f5f1eb;
-  --sb-text-muted:    #a09689;
-  --sb-text-nav:      #c8c0b8;
+  --sb-text-muted:    #c4b9ad;
+  --sb-text-nav:      #ede6dd;
   --sb-accent:        #cc0000;
   --sb-accent-bright: #e02020;
   --sb-active-bar:    3px;
@@ -106,15 +106,20 @@
 
 /* ── Secciones ── */
 .sb-section {
-  padding: 10px 0 4px;
+  padding: 12px 0 6px;
+}
+
+.sb-section + .sb-section {
+  border-top: 1px solid var(--sb-border);
+  margin-top: 4px;
 }
 
 .sb-section-label {
-  padding: 0 14px 6px;
-  font-size: 9.5px;
-  font-weight: 600;
+  padding: 0 14px 7px;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--sb-text-muted);
-  letter-spacing: 0.10em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   user-select: none;
 }
@@ -124,10 +129,11 @@
 a.sb-nav-item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 14px;
+  gap: 10px;
+  padding: 9px 14px;
   margin: 1px 8px;
-  font-size: 12.5px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--sb-text-nav);
   background-color: transparent;
   cursor: pointer;
@@ -144,7 +150,7 @@ a.sb-nav-item {
 
 .sb-nav-item:hover,
 a.sb-nav-item:hover {
-  color: var(--sb-text-primary);
+  color: #fff;
   background-color: var(--sb-bg-hover);
 }
 
@@ -187,12 +193,14 @@ a.sb-nav-item.sb-nav-item-active {
 
 /* ── Icono ── */
 .sb-icon {
-  font-size: 11px;
-  opacity: 0.85;
+  font-size: 14px;
+  opacity: 1;
   flex-shrink: 0;
   transition: transform var(--sb-transition);
   display: inline-flex;
   align-items: center;
+  width: 18px;
+  justify-content: center;
 }
 
 /* ── Footer / Logout ── */
@@ -214,17 +222,17 @@ a.sb-nav-item.sb-nav-item-active {
 
 /* Avatar inicial */
 .sb-user-avatar {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background-color: rgba(204, 0, 0, 0.18);
-  border: 1px solid rgba(204, 0, 0, 0.3);
+  background-color: rgba(204, 0, 0, 0.28);
+  border: 1.5px solid rgba(204, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  color: #e87070;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f09090;
   flex-shrink: 0;
   text-transform: uppercase;
 }
@@ -237,19 +245,19 @@ a.sb-nav-item.sb-nav-item-active {
 }
 
 .sb-user-name {
-  font-size: 12px;
-  color: #e5ddd4;
-  font-weight: 500;
+  font-size: 13px;
+  color: #f0ebe3;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .sb-user-role {
-  font-size: 9.5px;
+  font-size: 10px;
   color: var(--sb-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
 }
 
 /* Botón cerrar sesión — ROJO */
@@ -306,12 +314,12 @@ a.sb-nav-item.sb-nav-item-active {
   }
 
   .sb-section {
-    padding: 6px 0 2px;
+    padding: 8px 0 2px;
   }
 
   .sb-nav-item,
   a.sb-nav-item {
-    padding: 7px 14px;
+    padding: 8px 14px;
   }
 
   .sb-logout-wrap {

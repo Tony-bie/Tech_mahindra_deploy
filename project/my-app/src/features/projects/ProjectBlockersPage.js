@@ -31,6 +31,8 @@ export default function ProjectBlockersPage() {
     const [blockers, setBlockers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState({ text: '', type: '' });
+    const [approving, setApproving] = useState({}); // { [blockerId]: deadline string }
+    const [submittingId, setSubmittingId] = useState(null);
 
     useEffect(() => {
         let active = true;
@@ -65,18 +67,38 @@ export default function ProjectBlockersPage() {
         }
     }
 
-    async function approveBlocker(blockerId) {
+    function openApproveForm(blockerId) {
+        setApproving(prev => ({ ...prev, [blockerId]: '' }));
+    }
+
+    function cancelApproveForm(blockerId) {
+        setApproving(prev => { const next = { ...prev }; delete next[blockerId]; return next; });
+    }
+
+    async function confirmApprove(blockerId) {
+        const deadline = approving[blockerId];
+        if (!deadline) {
+            setMessage({ text: 'Debes seleccionar una fecha límite para aprobar', type: 'error' });
+            return;
+        }
         setMessage({ text: '', type: '' });
+        setSubmittingId(blockerId);
         try {
-            const { res, data } = await api.patch(`/blockers/${blockerId}/approve`, { approval_status: 'approved' });
+            const { res, data } = await api.patch(`/blockers/${blockerId}/approve`, {
+                approval_status: 'approved',
+                deadline: new Date(deadline).toISOString(),
+            });
             if (res.ok) {
-                setMessage({ text: 'Bloqueador aprobado', type: 'success' });
+                setMessage({ text: 'Bloqueador aprobado con fecha límite', type: 'success' });
+                cancelApproveForm(blockerId);
                 await refreshBlockers();
             } else {
                 setMessage({ text: data.message || 'Error aprobando bloqueador', type: 'error' });
             }
         } catch {
             setMessage({ text: 'Error de conexión', type: 'error' });
+        } finally {
+            setSubmittingId(null);
         }
     }
 
@@ -169,10 +191,33 @@ export default function ProjectBlockersPage() {
                                         <div style={s.metaItem}><span>Fecha</span><strong>{formatDate(blocker.created_at)}</strong></div>
                                     </div>
 
-                                    <div style={s.actions}>
-                                        <button style={s.approveBtn} onClick={() => approveBlocker(blocker.id_blocker)}>Aprobar</button>
-                                        <button style={s.rejectBtn} onClick={() => rejectBlocker(blocker.id_blocker)}>Rechazar</button>
-                                    </div>
+                                    {approving[blocker.id_blocker] !== undefined ? (
+                                        <div style={s.approveForm}>
+                                            <label style={s.approveLabel}>Fecha límite para resolver</label>
+                                            <input
+                                                type="date"
+                                                style={s.dateInput}
+                                                min={new Date().toISOString().slice(0, 10)}
+                                                value={approving[blocker.id_blocker]}
+                                                onChange={e => setApproving(prev => ({ ...prev, [blocker.id_blocker]: e.target.value }))}
+                                            />
+                                            <div style={s.actions}>
+                                                <button
+                                                    style={s.approveBtn}
+                                                    disabled={submittingId === blocker.id_blocker}
+                                                    onClick={() => confirmApprove(blocker.id_blocker)}
+                                                >
+                                                    {submittingId === blocker.id_blocker ? 'Aprobando...' : 'Confirmar aprobación'}
+                                                </button>
+                                                <button style={s.rejectBtn} onClick={() => cancelApproveForm(blocker.id_blocker)}>Cancelar</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={s.actions}>
+                                            <button style={s.approveBtn} onClick={() => openApproveForm(blocker.id_blocker)}>Aprobar</button>
+                                            <button style={s.rejectBtn} onClick={() => rejectBlocker(blocker.id_blocker)}>Rechazar</button>
+                                        </div>
+                                    )}
                                 </article>
                             );
                         })}
@@ -213,4 +258,7 @@ const s = {
     actions: { display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' },
     approveBtn: { height: 36, padding: '0 16px', border: 'none', borderRadius: 4, backgroundColor: '#D92F47', color: '#FFF', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
     rejectBtn: { height: 36, padding: '0 16px', border: '1px solid #DEDAD0', borderRadius: 4, backgroundColor: '#FFF', color: '#444', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
+    approveForm: { marginTop: 12, padding: '14px 16px', backgroundColor: '#FFF8F8', border: '1px solid #F5C6CC', borderRadius: 6, display: 'grid', gap: 10 },
+    approveLabel: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#636363' },
+    dateInput: { height: 34, border: '1px solid #DDD7CB', borderRadius: 5, padding: '0 10px', fontSize: 13, backgroundColor: '#FFF', fontFamily: 'inherit' },
 };

@@ -24,7 +24,11 @@ const approveBlockerSchema = z.object({
     approval_status: z.enum(['approved'], {
         message: "approval_status debe ser 'approved'",
     }),
+    deadline: z.string().datetime({ message: 'deadline debe ser una fecha ISO válida' }),
 });
+
+// Resolver bloqueador (viewer)
+const resolveBlockerSchema = z.object({});
 
 // Rechazar bloqueador
 const rejectBlockerSchema = z.object({
@@ -40,4 +44,5 @@ module.exports = {
     createBlockerSchema,
     approveBlockerSchema,
     rejectBlockerSchema,
+    resolveBlockerSchema,
 };

@@ -33,6 +33,37 @@
     font-weight: bold;
 }
 
+.login-password-wrap {
+    position: relative;
+}
+
+.login-input-password {
+    width: 100%;
+    padding-right: 34px;
+    box-sizing: border-box;
+}
+
+.login-eye-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 34px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    transition: color 0.15s;
+}
+
+.login-eye-btn:hover {
+    color: #444;
+}
+
 .login-button{
     -webkit-border-radius: 5px;
     border-radius: 5px;
@@ -50,4 +81,22 @@
 
 .login-button:active {
   transform: scale(0.97);
+}
+
+.login-error {
+    margin: 0;
+    padding: 9px 12px;
+    background-color: #FFF0F0;
+    border: 1px solid #FFB3BC;
+    border-left: 3px solid #E31837;
+    border-radius: 5px;
+    color: #B71C1C;
+    font-size: 12.5px;
+    font-weight: 500;
+    animation: errorIn 0.18s ease;
+}
+
+@keyframes errorIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }

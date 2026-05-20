@@ -145,7 +145,7 @@ export default function ViewerProjectBacklogPage() {
                                         const assigneeName = item.assignee?.username || 'Sin asignar';
 
                                         return (
-                                            <tr key={item.id_work_item}>
+                                            <tr key={item.id_work_item} className={isMyItem && item.status === 'in_progress' ? 'vpb-highlight-row' : ''}>
                                                 <td className="vpb-td-item">
                                                     <div style={{ fontWeight: 500 }}>{item.title}</div>
                                                     {item.description && (

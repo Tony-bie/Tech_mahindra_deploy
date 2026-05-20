@@ -104,6 +104,12 @@
 
 .vpb-highlight-row {
     background-color: #FFF5F7;
+    box-shadow: inset 3px 0 0 #D92F47;
+}
+
+.vpb-highlight-row .vpb-td-item div:first-child {
+    color: #D92F47;
+    font-weight: 600;
 }
 
 .vpb-item-important {
