@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuthContext } from '../../shared/context/AuthContext';
 import api from '../../config/api';
@@ -69,7 +69,8 @@ export default function ViewerWorkItemDetailPage() {
     const projectName = location.state?.projectName || `Proyecto ${id}`;
 
     // Item real pasado desde ViewerProjectBacklogPage via location.state
-    const workItem = adaptItem(location.state?.item, id);
+    const rawItem = location.state?.item;
+    const workItem = useMemo(() => adaptItem(rawItem, id), [rawItem, id]);
     const isMyItem = workItem?.assigneeId === user?.id;
     const [currentStatus, setCurrentStatus] = useState(normalizeStatus(workItem?.status));
     const [blockers, setBlockers] = useState([]);
@@ -116,17 +117,6 @@ export default function ViewerWorkItemDetailPage() {
         loadBlockers();
     }, [workItem?.id]);
 
-    useEffect(() => {
-        setCurrentStatus(normalizeStatus(workItem?.status));
-        setTimeline([
-            {
-                id: 'created',
-                title: 'Ítem de trabajo creado',
-                detail: 'Agregado al backlog del Sprint 4 para el proyecto viewer.',
-                time: 'Hoy · 08:10',
-            },
-        ]);
-    }, [workItem]);
 
     if (!workItem) {
         return (

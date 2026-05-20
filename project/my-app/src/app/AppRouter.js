@@ -20,11 +20,13 @@ import WorkItemsPage  from '../features/work_items/WorkItemsPage';
 import CostsPage      from '../features/costs/CostsPage';
 import ProjectBlockersPage from '../features/projects/ProjectBlockersPage';
 import Suggestions from '../features/suggestions/suggestions';
+import ScrollToTop from '../shared/components/ScrollToTop';
 
 export default function AppRouter() {
     return (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
+                <ScrollToTop />
                 <Routes>
                     {/* /login — redirige si ya está autenticado */}
                     <Route
