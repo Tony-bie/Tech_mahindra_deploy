@@ -244,11 +244,11 @@ export default function CostsPage() {
                                 </button>
                             </div>
                         ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <div style={{ ...s.kpiValue, color: '#1A1A1A' }}>{fmt(summary.estimated_budget)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
                                 {isPM && (
                                     <button style={s.editBtn} onClick={() => setEditBudget(true)}>✎</button>
                                 )}
+                                <div style={{ ...s.kpiValue, color: '#1A1A1A' }}>{fmt(summary.estimated_budget)}</div>
                             </div>
                         )}
                         <div style={s.kpiSub}>Presupuesto total del proyecto</div>
@@ -314,7 +314,7 @@ export default function CostsPage() {
                                     <thead>
                                         <tr>
                                             {['CATEGORÍA','DESCRIPCIÓN','MONTO','ENVIADO POR','FECHA','ESTADO','ACCIONES'].map(h => (
-                                                <th key={h} style={s.th}>{h}</th>
+                                                <th key={h} style={h === 'MONTO' ? s.thNum : s.th}>{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -323,7 +323,7 @@ export default function CostsPage() {
                                             <tr key={spend.id_spend} style={s.tr}>
                                                 <td style={s.td}><CategoryBadge category={spend.category || spend.type} /></td>
                                                 <td style={{ ...s.td, maxWidth: 260 }}>{spend.description}</td>
-                                                <td style={{ ...s.td, fontWeight: 700 }}>{fmt(spend.amount)}</td>
+                                                <td style={s.tdNum}>{fmt(spend.amount)}</td>
                                                 <td style={s.td}>{spend.submitter?.full_name || spend.submitter?.username || `User #${spend.submitted_by}`}</td>
                                                 <td style={s.td}>{fmtDate(spend.spend_date || spend.created_at)}</td>
                                                 <td style={s.td}><StatusBadge status={spend.status} /></td>
@@ -366,7 +366,7 @@ export default function CostsPage() {
                                     <thead>
                                         <tr>
                                             {['CATEGORÍA','DESCRIPCIÓN','MONTO','ENVIADO POR','FECHA','ESTADO'].map(h => (
-                                                <th key={h} style={s.th}>{h}</th>
+                                                <th key={h} style={h === 'MONTO' ? s.thNum : s.th}>{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -375,7 +375,7 @@ export default function CostsPage() {
                                             <tr key={spend.id_spend} style={s.tr}>
                                                 <td style={s.td}><CategoryBadge category={spend.category || spend.type} /></td>
                                                 <td style={{ ...s.td, maxWidth: 260 }}>{spend.description}</td>
-                                                <td style={{ ...s.td, fontWeight: 700 }}>{fmt(spend.amount)}</td>
+                                                <td style={s.tdNum}>{fmt(spend.amount)}</td>
                                                 <td style={s.td}>{spend.submitter?.full_name || spend.submitter?.username || `User #${spend.submitted_by}`}</td>
                                                 <td style={s.td}>{fmtDate(spend.spend_date || spend.created_at)}</td>
                                                 <td style={s.td}><StatusBadge status={spend.status} /></td>
@@ -464,7 +464,7 @@ const s = {
     msgOk:       { padding: '10px 14px', backgroundColor: '#F1F8E9', border: '1px solid #C5E1A5', borderRadius: 6, color: '#33691E', fontSize: 13, marginBottom: 16 },
     msgErr:      { padding: '10px 14px', backgroundColor: '#FFF5F5', border: '1px solid #FFCDD2', borderRadius: 6, color: '#B71C1C', fontSize: 13, marginBottom: 16 },
     kpiRow:      { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 },
-    kpi:         { backgroundColor: '#FFF', border: '1px solid #E8E8E6', borderRadius: 8, padding: '18px 20px' },
+    kpi:         { backgroundColor: '#FFF', border: '1px solid #E8E8E6', borderRadius: 8, padding: '18px 20px', textAlign: 'right' },
     kpiLabel:    { fontSize: 10, fontWeight: 700, color: '#AAA', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 },
     kpiValue:    { fontSize: 26, fontWeight: 700, marginBottom: 4 },
     kpiSub:      { fontSize: 12, color: '#AAA' },
@@ -475,8 +475,10 @@ const s = {
     sectionTitle:{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' },
     table:       { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
     th:          { padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #F0EEE8' },
+    thNum:       { padding: '8px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #F0EEE8' },
     tr:          { borderBottom: '1px solid #F7F5F0' },
     td:          { padding: '12px 12px', verticalAlign: 'middle' },
+    tdNum:       { padding: '12px 12px', verticalAlign: 'middle', textAlign: 'right', fontWeight: 700 },
     empty:       { color: '#AAA', fontSize: 13, padding: '24px 0', textAlign: 'center' },
     infoBox:     { backgroundColor: '#F9F8F6', border: '1px solid #E8E8E6', borderRadius: 6, padding: '10px 14px', fontSize: 13, color: '#555', marginBottom: 16 },
     formGrid:    { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
@@ -489,5 +491,5 @@ const s = {
     btnSubmit:   { height: 36, padding: '0 24px', backgroundColor: '#CC0000', color: '#FFF', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
     btnCancel:   { height: 36, padding: '0 16px', backgroundColor: 'transparent', color: '#555', border: '1px solid #D0D0CE', borderRadius: 4, fontSize: 13, cursor: 'pointer' },
     btnSm:       { height: 30, padding: '0 10px', backgroundColor: '#CC0000', color: '#FFF', border: 'none', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
-    editBtn:     { background: 'none', border: 'none', fontSize: 14, color: '#AAA', cursor: 'pointer', padding: '0 4px' },
+    editBtn:     { backgroundColor: 'rgba(180, 20, 20, 0.12)', border: '1px solid rgba(180, 20, 20, 0.25)', borderRadius: 4, fontSize: 13, color: '#e06060', cursor: 'pointer', padding: '3px 7px', lineHeight: 1 },
 };

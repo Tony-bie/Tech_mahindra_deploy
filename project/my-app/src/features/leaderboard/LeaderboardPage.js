@@ -27,7 +27,7 @@ function MyRankCard({ me }) {
     if (!me) {
         return (
             <div style={s.rankCard}>
-                <div style={s.rankCardTitle}>This Week's Rank</div>
+                <div style={s.rankCardTitle}>Posición de esta semana</div>
                 <div style={{ color: '#888', fontSize: 13, marginTop: 12 }}>
                     No has cerrado ítems esta semana aún.
                 </div>
@@ -37,10 +37,10 @@ function MyRankCard({ me }) {
 
     return (
         <div style={s.rankCard}>
-            <div style={s.rankCardTitle}>This Week's Rank</div>
+            <div style={s.rankCardTitle}>Posición de esta semana</div>
             <div style={s.bigRank}>#{me.rank}</div>
             <div style={s.bigPts}>{me.weekly_points} pts</div>
-            <div style={s.rankSub}>{me.items_closed} items · {me.on_time_rate}% on time</div>
+            <div style={s.rankSub}>{me.items_closed} ítems · {me.on_time_rate}% a tiempo</div>
         </div>
     );
 }
@@ -49,13 +49,13 @@ function PointsCard({ me }) {
     if (!me) return null;
     return (
         <div style={s.sideCard}>
-            <div style={s.sideCardTitle}>Points This Week</div>
+            <div style={s.sideCardTitle}>Puntos esta semana</div>
             <div style={s.pointsRow}>
-                <span style={{ color: '#555' }}>Items closed</span>
+                <span style={{ color: '#555' }}>Ítems cerrados</span>
                 <span style={{ fontWeight: 600 }}>{me.base_points} pts</span>
             </div>
             <div style={s.pointsRow}>
-                <span style={{ color: '#3C9A57' }}>On-time bonuses</span>
+                <span style={{ color: '#3C9A57' }}>Bonos a tiempo</span>
                 <span style={{ fontWeight: 600, color: '#3C9A57' }}>+{me.bonus_points} pts</span>
             </div>
             <div style={{ ...s.pointsRow, borderTop: '1px solid #E8E8E6', paddingTop: 10, marginTop: 4 }}>
@@ -69,15 +69,12 @@ function PointsCard({ me }) {
 function ScoringRulesCard() {
     return (
         <div style={s.sideCard}>
-            <div style={s.sideCardTitle}>Scoring Rules</div>
+            <div style={s.sideCardTitle}>Reglas de puntuación</div>
             <ul style={s.rulesList}>
-                <li>Close an item → base × weight pts</li>
-                <li>On-time close → +25% bonus</li>
-                <li>Leaderboard resets weekly</li>
+                <li>Cerrar un ítem → base × peso pts</li>
+                <li>Cierre a tiempo → +25% bono</li>
+                <li>El ranking se reinicia semanalmente</li>
             </ul>
-            <div style={{ fontSize: 11, color: '#AAA', marginTop: 8 }}>
-                * Points for completing items (RF-38/39) are assigned by the system on item closure.
-            </div>
         </div>
     );
 }

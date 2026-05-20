@@ -83,7 +83,7 @@ export const PROJECT_NAV_ITEMS = [
     },
     {
         suffix: 'costs',
-        label:  'Costs',
+        label:  'Costos',
         icon:   'costs',
         // viewer, pm, admin → todos pueden registrar o aprobar costos
     },
