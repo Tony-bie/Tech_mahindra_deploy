@@ -293,7 +293,12 @@ export default function ViewerProjectsTable({ user }) {
                                             </td>
                                             <td className="vpt-td">{prog ? `${prog.avance_esperado.toFixed(2)}%` : '—'}</td>
                                             <td className={`vpt-td ${deviationClass}`}>{deviacionStr}</td>
-                                            <td className="vpt-td" style={{ color: '#AAA' }}>—</td>
+                                            <td className="vpt-td">
+                                                {prog?.costo_aprobado != null
+                                                    ? `$${prog.costo_aprobado.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                    : <span style={{ color: '#AAA' }}>—</span>
+                                                }
+                                            </td>
                                             <td className="vpt-td" style={{ color: '#AAA' }}>—</td>
                                             <td className="vpt-td">
                                                 <span

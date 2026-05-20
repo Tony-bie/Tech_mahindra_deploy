@@ -1,37 +1,39 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../config/api';
 import ws from '../../config/ws';
+import './WorkItems.css';
 
-/**
- * HU-09 — Asignación de work items a viewer o al propio PM
- *
- * Props:
- *   - projectId:   id del proyecto
- *   - projectName: nombre para el encabezado
- *   - currentUser: { id_user | id, username, role }
- */
-function WorkItems({ projectId, projectName }) {
+function getInitials(username = '') {
+    return username.slice(0, 2).toUpperCase() || '?';
+}
+
+function StatusPill({ status }) {
+    const labels = { todo: 'Por hacer', in_progress: 'En progreso', done: 'Completado' };
+    const label = labels[status] || status;
+    return (
+        <span className={`wi-status wi-status--${status}`}>{label}</span>
+    );
+}
+
+export default function WorkItems({ projectId, projectName }) {
     const [items,           setItems]           = useState([]);
     const [sprints,         setSprints]         = useState([]);
     const [assignableUsers, setAssignableUsers] = useState([]);
     const [loading,         setLoading]         = useState(true);
     const [message,         setMessage]         = useState({ text: '', type: '' });
 
-    // Form estado
     const [newTitle,       setNewTitle]       = useState('');
     const [newDesc,        setNewDesc]        = useState('');
     const [selectedSprint, setSelectedSprint] = useState('');
     const [creating,       setCreating]       = useState(false);
 
-    /* ── Loaders ──────────────────────────────────────────── */
-
     const loadItems = useCallback(async () => {
         try {
             const { res, data } = await api.get(`/work-items?project_id=${projectId}`);
             if (res.ok) setItems(data.items || []);
-            else showMsg(data.message || 'Error cargando items', 'error');
+            else showMsg(data.message || 'Error cargando ítems', 'error');
         } catch {
-            showMsg('Error de conexión al cargar items', 'error');
+            showMsg('Error de conexión al cargar ítems', 'error');
         } finally {
             setLoading(false);
         }
@@ -58,19 +60,26 @@ function WorkItems({ projectId, projectName }) {
         loadAssignableUsers();
     }, [loadItems, loadSprints, loadAssignableUsers]);
 
-    /* ── Helpers ──────────────────────────────────────────── */
+    useEffect(() => {
+        const handler = ({ data }) => {
+            const msg = JSON.parse(data);
+            if (msg.type === 'WORK_ITEM_CREATED') {
+                setItems(prev => [...prev, msg.data]);
+            }
+        };
+        ws.addEventListener('message', handler);
+        return () => ws.removeEventListener('message', handler);
+    }, []);
 
     function showMsg(text, type = 'success') {
         setMessage({ text, type });
         setTimeout(() => setMessage({ text: '', type: '' }), 4000);
     }
 
-    /* ── Acciones ─────────────────────────────────────────── */
-
     async function handleCreate(e) {
         e.preventDefault();
-        if (!newTitle.trim())   { showMsg('El título es obligatorio', 'error'); return; }
-        if (!selectedSprint)    { showMsg('Selecciona un sprint', 'error'); return; }
+        if (!newTitle.trim())  { showMsg('El título es obligatorio', 'error'); return; }
+        if (!selectedSprint)   { showMsg('Selecciona un sprint', 'error'); return; }
 
         setCreating(true);
         try {
@@ -80,15 +89,14 @@ function WorkItems({ projectId, projectName }) {
                 title:       newTitle.trim(),
                 description: newDesc.trim() || null,
             });
-            console.log('res: ',res, 'data: ', data)
             if (res.ok) {
                 setNewTitle('');
                 setNewDesc('');
-                showMsg('Item creado correctamente');
+                showMsg('Ítem creado correctamente');
                 loadItems();
-                ws.send(JSON.stringify({type: "WORK_ITEM_CREATED", data: data.item}))
+                ws.send(JSON.stringify({ type: 'WORK_ITEM_CREATED', data: data.item }));
             } else {
-                showMsg(data.message || 'Error creando item', 'error');
+                showMsg(data.message || 'Error creando ítem', 'error');
             }
         } catch {
             showMsg('Error de conexión', 'error');
@@ -112,120 +120,138 @@ function WorkItems({ projectId, projectName }) {
         }
     }
 
-    useEffect(() => {
-        const work_item_handler = ({data}) => {
-            const message = JSON.parse(data)
-            if(message.type === 'WORK_ITEM_CREATED') {
-                const newWorkITem = message.data
-                setItems(prev => [...prev, newWorkITem])
-            }
-        }
-
-        ws.addEventListener('message', work_item_handler)
-
-        return() => ws.removeEventListener('message', work_item_handler)
-    }, [])
-
-    /* ── Render ───────────────────────────────────────────── */
-
-    if (loading) return <div style={s.loading}>Cargando items...</div>;
+    if (loading) return <div className="wi-loading">Cargando ítems...</div>;
 
     return (
         <div>
-            <h1 style={s.title}>Work Items — {projectName}</h1>
-            <p style={s.subtitle}>
-                Asigna items a los visores vinculados al proyecto o a ti mismo (HU-09).
-            </p>
+            {/* Encabezado */}
+            <div className="wi-heading">
+                <h1>Ítems de trabajo — {projectName}</h1>
+                <p>Asigna ítems a los visores vinculados al proyecto o a ti mismo.</p>
+            </div>
 
+            {/* Toast */}
             {message.text && (
-                <div style={message.type === 'error' ? s.msgError : s.msgSuccess}>
+                <div className={`wi-toast wi-toast--${message.type}`}>
                     {message.text}
                 </div>
             )}
 
-            {/* ── Crear item ──────────────────────────────── */}
-            <div style={s.card}>
-                <div style={s.sectionLabel}>NUEVO ITEM</div>
-                <div style={s.formRow}>
-                    {/* Sprint selector */}
-                    <select
-                        style={{ ...s.input, minWidth: 180, flex: 'none' }}
-                        value={selectedSprint}
-                        onChange={e => setSelectedSprint(e.target.value)}
-                    >
-                        <option value="">— Sprint * —</option>
-                        {sprints.map(sp => (
-                            <option key={sp.id_sprint} value={sp.id_sprint}>
-                                {sp.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <input
-                        type="text"
-                        placeholder="Título del item *"
-                        value={newTitle}
-                        onChange={e => setNewTitle(e.target.value)}
-                        style={s.input}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Descripción (opcional)"
-                        value={newDesc}
-                        onChange={e => setNewDesc(e.target.value)}
-                        style={s.input}
-                    />
-                    <button onClick={handleCreate} style={s.btnPrimary} disabled={creating}>
-                        {creating ? 'Creando...' : 'Crear item'}
-                    </button>
+            {/* Formulario de creación */}
+            <div className="wi-card">
+                <div className="wi-card-header">
+                    <div className="wi-section-label">Nuevo ítem</div>
                 </div>
+                <form className="wi-form" onSubmit={handleCreate}>
+                    <div className="wi-form-grid">
+                        <div className="wi-form-field">
+                            <label>Sprint</label>
+                            <select
+                                className="wi-select"
+                                value={selectedSprint}
+                                onChange={e => setSelectedSprint(e.target.value)}
+                            >
+                                <option value="">— Seleccionar —</option>
+                                {sprints.map(sp => (
+                                    <option key={sp.id_sprint} value={sp.id_sprint}>
+                                        {sp.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="wi-form-field">
+                            <label>Título *</label>
+                            <input
+                                className="wi-input"
+                                type="text"
+                                placeholder="Nombre del ítem"
+                                value={newTitle}
+                                onChange={e => setNewTitle(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="wi-form-field">
+                            <label>Descripción</label>
+                            <input
+                                className="wi-input"
+                                type="text"
+                                placeholder="Opcional"
+                                value={newDesc}
+                                onChange={e => setNewDesc(e.target.value)}
+                            />
+                        </div>
+
+                        <button className="wi-btn-create" type="submit" disabled={creating}>
+                            {creating ? 'Creando...' : 'Crear ítem'}
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            {/* ── Lista de items ──────────────────────────── */}
-            <div style={s.card}>
-                <div style={s.sectionLabel}>ITEMS DEL PROYECTO ({items.length})</div>
+            {/* Tabla de ítems */}
+            <div className="wi-card">
+                <div className="wi-count-row">
+                    <span className="wi-count">Ítems del proyecto</span>
+                    <span className="wi-section-label">{items.length} ítems</span>
+                </div>
+
                 {items.length === 0 ? (
-                    <div style={s.emptyMsg}>No hay items todavía. Crea el primero arriba.</div>
+                    <div className="wi-empty">
+                        <div className="wi-empty-icon">◻</div>
+                        <p>No hay ítems todavía. Crea el primero arriba.</p>
+                    </div>
                 ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={s.table}>
+                    <div className="wi-table-wrap">
+                        <table className="wi-table">
                             <thead>
                                 <tr>
-                                    <th style={s.th}>#</th>
-                                    <th style={s.th}>Título</th>
-                                    <th style={s.th}>Descripción</th>
-                                    <th style={s.th}>Sprint</th>
-                                    <th style={s.th}>Estado</th>
-                                    <th style={s.th}>Responsable actual</th>
-                                    <th style={s.th}>Reasignar a</th>
+                                    <th className="wi-th wi-th--num">#</th>
+                                    <th className="wi-th">Título</th>
+                                    <th className="wi-th">Descripción</th>
+                                    <th className="wi-th wi-th--sm">Sprint</th>
+                                    <th className="wi-th wi-th--sm">Estado</th>
+                                    <th className="wi-th wi-th--med">Responsable</th>
+                                    <th className="wi-th wi-th--med">Reasignar</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {items.map((item, idx) => {
                                     const sprint = sprints.find(sp => sp.id_sprint === item.id_sprint);
                                     return (
-                                        <tr key={item.id_work_item} style={idx % 2 === 0 ? {} : { backgroundColor: '#FAFAF9' }}>
-                                            <td style={{ ...s.td, color: '#AAA', width: 28 }}>{idx + 1}</td>
-                                            <td style={{ ...s.td, fontWeight: 500 }}>{item.title}</td>
-                                            <td style={{ ...s.td, color: '#888' }}>{item.description || '—'}</td>
-                                            <td style={{ ...s.td, color: '#555', fontSize: 11 }}>
-                                                {sprint?.name || `#${item.id_sprint}`}
+                                        <tr key={item.id_work_item} className="wi-tr">
+                                            <td className="wi-td wi-td--num">{idx + 1}</td>
+                                            <td className="wi-td wi-td--title">{item.title}</td>
+                                            <td className="wi-td wi-td--desc">
+                                                <span>{item.description || '—'}</span>
                                             </td>
-                                            <td style={s.td}>
-                                                <span style={statusStyle(item.status)}>
-                                                    {statusLabel(item.status)}
+                                            <td className="wi-td">
+                                                <span className="wi-sprint-tag">
+                                                    {sprint?.name || `Sprint #${item.id_sprint}`}
                                                 </span>
                                             </td>
-                                            <td style={s.td}>
-                                                {item.assignee
-                                                    ? <span style={s.assigneeBadge}>{item.assignee.username}</span>
-                                                    : <span style={s.unassigned}>Sin asignar</span>}
+                                            <td className="wi-td">
+                                                <StatusPill status={item.status} />
                                             </td>
-                                            <td style={s.td}>
+                                            <td className="wi-td">
+                                                {item.assignee ? (
+                                                    <div className="wi-assignee">
+                                                        <div className="wi-assignee-avatar">
+                                                            {getInitials(item.assignee.username)}
+                                                        </div>
+                                                        <span className="wi-assignee-name">
+                                                            {item.assignee.username}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="wi-unassigned">Sin asignar</span>
+                                                )}
+                                            </td>
+                                            <td className="wi-td">
                                                 <select
+                                                    className="wi-reassign-select"
                                                     value={item.assignee_id || ''}
                                                     onChange={e => handleAssign(item.id_work_item, e.target.value)}
-                                                    style={s.select}
                                                 >
                                                     <option value="">— Sin asignar —</option>
                                                     {assignableUsers.map(u => (
@@ -246,36 +272,3 @@ function WorkItems({ projectId, projectName }) {
         </div>
     );
 }
-
-function statusLabel(s) {
-    return { todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[s] || s;
-}
-
-function statusStyle(status) {
-    const base = { display: 'inline-block', padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600 };
-    if (status === 'done')        return { ...base, backgroundColor: '#E7F6EA', color: '#2E7D32' };
-    if (status === 'in_progress') return { ...base, backgroundColor: '#E7EEFF', color: '#2453C9' };
-    return { ...base, backgroundColor: '#F5F5F4', color: '#666' };
-}
-
-const s = {
-    title:         { fontSize: 22, fontWeight: 700, marginBottom: 4 },
-    subtitle:      { fontSize: 13, color: '#888', marginBottom: 28 },
-    loading:       { padding: 40, textAlign: 'center', color: '#888' },
-    msgError:      { padding: '10px 14px', backgroundColor: '#FFF5F5', border: '1px solid #FFCDD2', borderRadius: 6, color: '#B71C1C', fontSize: 13, marginBottom: 20 },
-    msgSuccess:    { padding: '10px 14px', backgroundColor: '#F1F8E9', border: '1px solid #C5E1A5', borderRadius: 6, color: '#33691E', fontSize: 13, marginBottom: 20 },
-    card:          { backgroundColor: '#FFF', border: '1px solid #E8E8E6', borderRadius: 8, padding: '20px 24px', marginBottom: 20 },
-    sectionLabel:  { fontSize: 11, fontWeight: 700, color: '#555', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 14 },
-    formRow:       { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
-    input:         { flex: 1, minWidth: 140, height: 34, padding: '0 10px', fontSize: 13, border: '1px solid #E0E0DE', borderRadius: 4, backgroundColor: '#FAFAFA' },
-    btnPrimary:    { height: 34, padding: '0 20px', backgroundColor: '#CC0000', color: '#FFF', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' },
-    table:         { width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 },
-    th:            { textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid #E8E8E6', fontSize: 11, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' },
-    td:            { padding: '10px 10px', borderBottom: '1px solid #F0EEE8', verticalAlign: 'middle' },
-    assigneeBadge: { display: 'inline-block', padding: '2px 10px', backgroundColor: '#E7EEFF', color: '#2453C9', borderRadius: 999, fontSize: 11, fontWeight: 600 },
-    unassigned:    { color: '#BBB', fontStyle: 'italic', fontSize: 12 },
-    select:        { height: 28, padding: '0 6px', fontSize: 12, border: '1px solid #E0E0DE', borderRadius: 4, backgroundColor: '#FAFAFA', maxWidth: 200 },
-    emptyMsg:      { fontSize: 13, color: '#AAA', padding: '16px 0' },
-};
-
-export default WorkItems;
