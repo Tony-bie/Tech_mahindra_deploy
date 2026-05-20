@@ -246,6 +246,7 @@ async function listBlockers(req, res) {
 async function approveBlocker(req, res) {
     try {
         const blockerId = parseInt(req.params.id);
+        const { deadline } = req.body;
         const userId = req.user.id_user;
 
         // Obtener bloqueador
@@ -267,13 +268,14 @@ async function approveBlocker(req, res) {
             });
         }
 
-        // Actualizar estado a aprobado
+        // Actualizar estado a aprobado con fecha límite
         const { data: updated, error: updateErr } = await supabase
             .from('blocker_implication')
             .update({
                 approval_status: 'approved',
                 approved_by: userId,
                 decided_at: new Date().toISOString(),
+                deadline,
             })
             .eq('id_blocker', blockerId)
             .select()
@@ -377,9 +379,69 @@ async function rejectBlocker(req, res) {
     }
 }
 
+// ─── PATCH /blockers/:id/resolve ────────────────────────────────────────
+// Viewer asignado al work item puede marcar el bloqueador como resuelto
+async function resolveBlocker(req, res) {
+    try {
+        const blockerId = parseInt(req.params.id);
+        const userId = req.user.id_user;
+
+        const { data: blocker, error: fetchErr } = await supabase
+            .from('blocker_implication')
+            .select('*')
+            .eq('id_blocker', blockerId)
+            .single();
+
+        if (fetchErr || !blocker) {
+            return res.status(404).json({ message: 'Bloqueador no encontrado' });
+        }
+
+        if (blocker.approval_status !== 'approved') {
+            return res.status(400).json({ message: 'Solo se pueden resolver bloqueadores aprobados' });
+        }
+
+        if (blocker.resolved_at) {
+            return res.status(400).json({ message: 'Este bloqueador ya fue resuelto' });
+        }
+
+        // Solo el viewer asignado al work item puede resolver
+        const isAssigned = await isItemAssignedToUser(blocker.id_work_item, userId);
+        if (!isAssigned) {
+            return res.status(403).json({ message: 'Solo el responsable del ítem puede finalizar el bloqueador' });
+        }
+
+        const { data: updated, error: updateErr } = await supabase
+            .from('blocker_implication')
+            .update({
+                resolved_at: new Date().toISOString(),
+                resolved_by: userId,
+            })
+            .eq('id_blocker', blockerId)
+            .select()
+            .single();
+
+        if (updateErr) {
+            return res.status(500).json({ message: 'Error resolviendo bloqueador', error: updateErr.message });
+        }
+
+        await supabase.from('audit_log').insert([{
+            id_user: userId,
+            action: 'RESOLVE_BLOCKER',
+            entity: 'blocker_implication',
+            entity_id: String(blockerId),
+            payload: { project_id: blocker.id_project, work_item_id: blocker.id_work_item },
+        }]);
+
+        return res.status(200).json({ message: 'Bloqueador finalizado', blocker: updated });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     createBlocker,
     listBlockers,
     approveBlocker,
     rejectBlocker,
+    resolveBlocker,
 };

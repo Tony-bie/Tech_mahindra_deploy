@@ -6,6 +6,7 @@ const {
     listBlockers,
     approveBlocker,
     rejectBlocker,
+    resolveBlocker,
 } = require('./blockers.controller');
 
 const { authUser, requireRole } = require('../../shared/middleware/auth');
@@ -14,6 +15,7 @@ const {
     createBlockerSchema,
     approveBlockerSchema,
     rejectBlockerSchema,
+    resolveBlockerSchema,
 } = require('./blockers.validation');
 
 // Listar bloqueadores de un item: cualquier rol autenticado
@@ -43,6 +45,14 @@ router.patch(
     requireRole('pm', 'admin'),
     validate(rejectBlockerSchema),
     rejectBlocker
+);
+
+// Resolver bloqueador: viewer asignado al work item
+router.patch(
+    '/:id/resolve',
+    authUser,
+    validate(resolveBlockerSchema),
+    resolveBlocker
 );
 
 module.exports = router;

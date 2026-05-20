@@ -66,7 +66,10 @@ CREATE TABLE IF NOT EXISTS blocker_implication (
     approved_by INT REFERENCES users(id_user),
     approval_status VARCHAR(50) DEFAULT 'pending' CHECK (approval_status IN ('pending', 'approved', 'rejected')),
     rejected_reason TEXT,
-    decided_at TIMESTAMP
+    decided_at TIMESTAMP,
+    deadline TIMESTAMPTZ,
+    resolved_at TIMESTAMPTZ,
+    resolved_by INT REFERENCES users(id_user)
 );
 
 -- Indexes
