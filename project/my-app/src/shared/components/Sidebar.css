@@ -9,9 +9,9 @@
   --sb-bg-active:     #cc0000;
   --sb-bg-footer:     #17140f;
   --sb-border:        rgba(255, 255, 255, 0.07);
-  --sb-text-primary:  #f0ece4;
-  --sb-text-muted:    #7d7568;
-  --sb-text-nav:      #a09890;
+  --sb-text-primary:  #f5f1eb;
+  --sb-text-muted:    #a09689;
+  --sb-text-nav:      #c8c0b8;
   --sb-accent:        #cc0000;
   --sb-accent-bright: #e02020;
   --sb-active-bar:    3px;
@@ -175,7 +175,7 @@ a.sb-nav-item.sb-nav-item-active {
 
 /* Item de proyecto (viewer) */
 .sb-nav-item-project {
-  color: var(--sb-text-muted);
+  color: var(--sb-text-nav);
   cursor: default;
   font-size: 12px;
 }
@@ -238,7 +238,7 @@ a.sb-nav-item.sb-nav-item-active {
 
 .sb-user-name {
   font-size: 12px;
-  color: #d8d0c2;
+  color: #e5ddd4;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
