@@ -39,10 +39,6 @@ o si quieres correrlo en modo desarrollo
 ```Bash 
 tu@computadora: node_runtime $ pnpm run dev
 ```
-Para corre el WebSocket, en la misma carpeta que se arranca el backend, se corre este comando
-```Bash
-tu@computadora: node_runtime $ pnpm run ws
-```
 Para correr frontend
 ```Bash
 tu@computadora: ~ $ cd Project-Management-System-TechMahindra/project/my-app

@@ -28,7 +28,7 @@ export const NAV_ITEMS = [
         label: 'Usuarios',
         icon: 'users',
         section: 'general',
-        roles: ['pm', 'admin'],           // Solo gestores
+        roles: ['admin'],           // Solo gestores
     },
 
     // ── Inteligencia ───────────────────────────────────────────────────────

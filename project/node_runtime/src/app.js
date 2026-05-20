@@ -16,6 +16,9 @@ const dashboardRoutes = require('./modules/dashboard/dashboard.routes')
 
 const app = express();
 
+require('../WsServer') 
+
+
 app.use(express.json());
 app.use(cors({
     origin: ['http://localhost:3000', 'http://localhost:3001'],

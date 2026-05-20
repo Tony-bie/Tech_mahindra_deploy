@@ -1,9 +1,15 @@
 const supabase = require('../../config/supabase')
 
+const ai = require('../../config/gemini')
+
+const { WebSocket } = require('ws');
+
+const wsServer = require('../../../WsServer')
+
 async function get_projects(req, res) {
     const { id_user } = req.user
 
-    console.log('id_user:', id_user)
+    //console.log('id_user:', id_user)
 
     try{
         const responseMember = await supabase
@@ -37,7 +43,7 @@ async function get_projects(req, res) {
     }
 }
 
-async function chat_bot(req, res) {
+async function get_info_all_project(req, res) {
     const { id_project } = req.body
 
     console.log(id_project)
@@ -48,7 +54,7 @@ async function chat_bot(req, res) {
             .select('*')
             .eq('id_project', id_project)
 
-        console.log(responseProject)
+        //console.log(responseProject)
         
         if(responseProject.error){
             return res.status(401).json({ message: 'Not match project' });
@@ -61,4 +67,35 @@ async function chat_bot(req, res) {
     
 }
 
-module.exports = { get_projects, chat_bot }
+async function chat_bot(req, res) {
+    const {mensaje, id_project} = req.body
+    try {
+        const stream = await ai.interactions.create({
+            model: "gemini-3.5-flash",
+            input: String(mensaje),
+            stream: true,
+        });
+
+        for await (const event of stream) {
+            console.log('EVENT:', event.event_type)
+            if (event.event_type === "step.delta") {
+                if (event.delta.type === "text") {
+                    process.stdout.write(event.delta.text);
+                    wsServer.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) { 
+                            client.send(JSON.stringify({type: 'chatbot', data: event.delta.text, id_project: id_project}))
+                        }
+                    });
+                }
+            }
+        }
+        res.json({ ok: true })
+    } 
+    catch (error) {
+        console.error('chat_bot error:', error)
+        res.status(500).json({ message: 'chatbot failed' })
+  }
+}
+
+
+module.exports = { get_projects, get_info_all_project, chat_bot }
