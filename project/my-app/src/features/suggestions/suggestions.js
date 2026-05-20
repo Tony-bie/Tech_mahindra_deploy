@@ -45,13 +45,13 @@ export default function Suggestions() {
 
         try{
             const response = await api.post('/suggestions/get_info_all_project',{ id_project: project.id_project })
-            console.log('1. respuesta backend:', response.data.data)  
+            console.log('1. respuesta backend:', response.data.data)
             const mensaje = `  Responde siempre usando formato Markdown válido.
                                 Usa **negritas** para títulos de sección.
                                 Usa listas con "- " o "1. " para enumerar puntos.
                                 Nunca uses saltos de línea simples como separadores de lista.
-                                Eres una IA asistente de Project Manager. El proyecto tiene estatus "${project.status}". 
-                                Con base en estos datos: ${JSON.stringify(response.data.data)}, 
+                                Eres una IA asistente de Project Manager. El proyecto tiene estatus "${project.status}".
+                                Con base en estos datos: ${JSON.stringify(response.data.data)},
                                 identifica la causa principal del problema y da UNA sugerencia concreta y breve de por dónde empezar a actuar. `
 
             if (aiOnlineSelect){
@@ -66,7 +66,7 @@ export default function Suggestions() {
                 console.log("Local funcionando")
                 try{
                     const model = 'llama3.2:3b';
-                    const message = [{ role: "user", 
+                    const message = [{ role: "user",
                                         content: mensaje}];
 
                     const responseClaude = await fetch('http://localhost:11434/api/chat', {
@@ -134,22 +134,30 @@ export default function Suggestions() {
                     ...prev,
                     [message.id_project]: (prev[message.id_project] || "") + chunk
                 }))
-                
+
             }
-        }  
+        }
 
         getProjects()
-        ws.addEventListener('message', handler)  
+        ws.addEventListener('message', handler)
 
         return () => {
             ws.removeEventListener('message', handler)
         }
     }, [])
-     
+
     return(
         <div className="suggestions-container">
-            <h1>Sugerencias de proyecto</h1>
+
+            {/* Header */}
+            <div className="sg-header">
+                <h1>Sugerencias de proyecto</h1>
+                <p>Análisis con IA de proyectos en riesgo. Selecciona un proyecto para ver recomendaciones.</p>
+            </div>
+
+            {/* AI selector */}
             <div className="ai-selector">
+                <span className="ai-selector-label">Motor IA</span>
                 <button
                     className={`ai-btn ${aiOnlineSelect ? 'active' : ''}`}
                     onClick={() => setaiOnlineSelect(true)}
@@ -160,54 +168,89 @@ export default function Suggestions() {
                     className={`ai-btn ${!aiOnlineSelect ? 'active' : ''}`}
                     onClick={() => setaiOnlineSelect(false)}
                 >
-                    ⬡ Local IA
+                    ⬡ IA Local
                 </button>
             </div>
 
+            {/* Layout */}
             <div className="suggestions-layout">
-                {loadingProjects 
+                {loadingProjects
                     ? <p className="loading-text-projects">Cargando proyectos...</p>
-                    : 
+                    :
                     <>
-                    <div className="table-wrapper">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th>Nombre del proyecto</th>
-                                <th>Estado</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {projectsStatus.all_data.map(project => (
-                                <tr key={project.id_project}  onClick={() => generate_suggestion(project)}>
-                                <td>{project.project.project_name}</td>
-                                <td>
-                                    <span className={`badge badge-${project.status}`}>
-                                    {project.status}
-                                    </span>
-                                </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
+                        {/* Panel izquierdo: tabla de proyectos */}
+                        <div className="table-wrapper">
+                            <div className="sg-panel-header">
+                                <span className="sg-panel-label">Proyectos en riesgo</span>
+                                <span className="sg-count-badge">{projectsStatus.all_data.length}</span>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Proyecto</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {projectsStatus.all_data.map(project => (
+                                        <tr
+                                            key={project.id_project}
+                                            onClick={() => generate_suggestion(project)}
+                                            className={projectID === project.id_project ? 'project-row--selected' : ''}
+                                        >
+                                            <td>{project.project.project_name}</td>
+                                            <td>
+                                                <span className={`badge badge-${project.status}`}>
+                                                    {project.status === 'red' ? 'Rojo' : 'Amarillo'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
+
+                        {/* Panel derecho: análisis AI */}
                         <div className="chat-panel">
-                            {loading && <p className="loading-text">Analizando proyecto {selectedProject}...</p>}
-                            {selectedProject && <h3 className="chat-title-project">Proyecto {selectedProject} analizado</h3>}
-                            {chat[projectID]
-                                ? <div className="chat-content">
-                                    <ReactMarkdown>{chat[projectID]}</ReactMarkdown>
+                            <div className="chat-panel-header">
+                                <div className={`chat-panel-dot ${loading ? 'chat-panel-dot--loading' : selectedProject ? '' : 'chat-panel-dot--idle'}`} />
+                                <span className="chat-panel-title">
+                                    {loading
+                                        ? `Analizando ${selectedProject || 'proyecto'}...`
+                                        : selectedProject
+                                            ? `Análisis — ${selectedProject}`
+                                            : 'Análisis de proyecto'
+                                    }
+                                </span>
+                                {agentSelect[projectID] && (
+                                    <span className="chat-panel-agent">{agentSelect[projectID]}</span>
+                                )}
+                            </div>
+
+                            <div className="chat-panel-body">
+                                {loading && (
+                                    <p className="loading-text">Generando sugerencias</p>
+                                )}
+
+                                {chat[projectID] ? (
+                                    <div className="chat-content">
+                                        <h3 className="chat-title-project">{selectedProject}</h3>
+                                        <ReactMarkdown>{chat[projectID]}</ReactMarkdown>
                                         <span className="powered-label">
                                             Potenciado por {agentSelect[projectID]}
                                         </span>
                                     </div>
-                                    
-                                : !loading && <p className="chat-placeholder">Selecciona un proyecto para ver sugerencias</p>
-                            }
+                                ) : !loading && (
+                                    <div className="chat-placeholder">
+                                        <div className="chat-placeholder-icon">◈</div>
+                                        <p>Selecciona un proyecto para ver sugerencias</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </>
-                    }
+                }
             </div>
-            </div>
+        </div>
     )
 }
