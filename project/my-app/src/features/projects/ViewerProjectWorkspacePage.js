@@ -1,17 +1,48 @@
+import { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { getBacklogItemsForProject } from './viewerBacklogMock';
+import api from '../../config/api';
 import ProjectProgressCard from './ProjectProgressCard';
 import './ViewerProjectWorkspacePage.css';
 
 export default function ViewerProjectWorkspacePage() {
-    const { id } = useParams();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const projectName = location.state?.projectName || `Proyecto ${id}`;
-    const backlogItems = getBacklogItemsForProject(id);
-    const blockedItems = backlogItems.filter((item) => item.blockerCount > 0).length;
-    const doneItems = backlogItems.filter((item) => item.status === 'Done').length;
-    const progress = Math.round((doneItems / Math.max(backlogItems.length, 1)) * 100);
+    const { id }       = useParams();
+    const location     = useLocation();
+    const navigate     = useNavigate();
+    const projectName  = location.state?.projectName || `Proyecto ${id}`;
+
+    const [items,         setItems]         = useState([]);
+    const [activeSprint,  setActiveSprint]  = useState(null);
+    const [loading,       setLoading]       = useState(true);
+
+    const loadData = useCallback(async () => {
+        try {
+            const [itemsRes, sprintsRes] = await Promise.all([
+                api.get(`/work-items?project_id=${id}`),
+                api.get(`/sprints/${id}/get-sprints`),
+            ]);
+
+            if (itemsRes.res.ok) {
+                setItems(itemsRes.data.items || []);
+            }
+
+            const sprintList = sprintsRes.data?.data || sprintsRes.data || [];
+            const active = Array.isArray(sprintList)
+                ? sprintList.find(s => s.status === 'active') || sprintList[sprintList.length - 1] || null
+                : null;
+            setActiveSprint(active);
+        } catch {
+            // no bloquea la vista
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
+    useEffect(() => { loadData(); }, [loadData]);
+
+    const doneItems    = items.filter(i => i.status === 'done').length;
+    const totalItems   = items.length;
+    const progress     = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+    const inProgress   = items.filter(i => i.status === 'in_progress').length;
 
     return (
         <div className="vpw-page">
@@ -19,122 +50,99 @@ export default function ViewerProjectWorkspacePage() {
                 <div className="vpw-breadcrumb">
                     <span>Inicio</span>
                     <span className="vpw-sep">/</span>
-                    <span>Projects</span>
+                    <span>Proyectos</span>
                     <span className="vpw-sep">/</span>
                     <span className="vpw-current-crumb">{projectName}</span>
                 </div>
-                <button className="vpw-backlog-btn" onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}>
-                    Ir al backlog
-                </button>
+                {activeSprint && (
+                    <div className="vpw-hero-tag">{activeSprint.name} activo</div>
+                )}
             </div>
 
             <div className="vpw-body">
+                {/* Avance real vs esperado */}
                 <ProjectProgressCard projectId={id} />
 
-                <section className="vpw-hero-card">
-                    <div>
-                        <div className="vpw-kicker">Espacio de trabajo</div>
-                        <h1 className="vpw-title">{projectName}</h1>
-                        <p className="vpw-subtitle">
-                            Vista visual del proyecto para revisar avance, backlog y bloqueadores sin tocar backend todavía.
-                        </p>
-                    </div>
-
-                    <div className="vpw-hero-actions">
-                        <button className="vpw-primary-btn" onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}>
-                            Ver backlog
-                        </button>
-                        <div className="vpw-hero-tag">Sprint 4 activo</div>
-                    </div>
-                </section>
-
+                {/* Stats */}
                 <section className="vpw-stats-grid">
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Ítems en backlog</span>
-                        <strong className="vpw-stat-value">{backlogItems.length}</strong>
-                        <span className="vpw-stat-hint">Ítems visibles para el viewer</span>
+                        <span className="vpw-stat-label">Ítems totales</span>
+                        <strong className="vpw-stat-value">{loading ? '—' : totalItems}</strong>
                     </div>
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Ítems bloqueados</span>
-                        <strong className="vpw-stat-value-danger">{blockedItems}</strong>
-                        <span className="vpw-stat-hint">Bloqueadores o implicaciones activas</span>
+                        <span className="vpw-stat-label">En progreso</span>
+                        <strong className="vpw-stat-value">{loading ? '—' : inProgress}</strong>
                     </div>
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Progreso visual</span>
-                        <strong className="vpw-stat-value">{progress}%</strong>
+                        <span className="vpw-stat-label">Completados</span>
+                        <strong className="vpw-stat-value">{loading ? '—' : doneItems}</strong>
                         <span className="vpw-progress-track">
                             <span className="vpw-progress-fill" style={{ width: `${progress}%` }} />
                         </span>
                     </div>
                     <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Estado actual</span>
-                        <strong className="vpw-stat-value">En revisión</strong>
-                        <span className="vpw-stat-hint">Solo representación visual por ahora</span>
+                        <span className="vpw-stat-label">Sprint activo</span>
+                        <strong className="vpw-stat-value" style={{ fontSize: 15 }}>
+                            {loading ? '—' : activeSprint ? activeSprint.name : 'Sin sprint'}
+                        </strong>
+                        {activeSprint?.SP_estimated && (
+                            <span className="vpw-stat-hint">{activeSprint.SP_estimated} SP estimados</span>
+                        )}
                     </div>
                 </section>
 
                 <section className="vpw-content-grid">
                     <div className="vpw-main-column">
+                        {/* Work items */}
                         <div className="vpw-card">
                             <div className="vpw-card-header">
-                                <div>
-                                    <div className="vpw-section-label">Acceso rápido</div>
-                                    <div className="vpw-card-title">Entradas principales del proyecto</div>
-                                </div>
-                            </div>
-
-                            <div className="vpw-quick-grid">
-                                <button className="vpw-quick-action" onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}>
-                                    Backlog
-                                </button>
-                                <button className="vpw-quick-action" onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}>
-                                    Bloqueadores
-                                </button>
-                                <button className="vpw-quick-action" onClick={() => navigate('/leaderboard')}>
-                                    Leaderboard
-                                </button>
-                                <button className="vpw-quick-action" onClick={() => navigate('/audit')}>
-                                    Auditoría
+                                <div className="vpw-card-title">Ítems del proyecto</div>
+                                <button
+                                    className="vpw-snapshot-btn"
+                                    onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}
+                                >
+                                    Ver todos
                                 </button>
                             </div>
-                        </div>
-
-                        <div className="vpw-card">
-                            <div className="vpw-card-header">
-                                <div>
-                                    <div className="vpw-section-label">Resumen del backlog</div>
-                                    <div className="vpw-card-title">Resumen rápido de ítems</div>
-                                </div>
-                            </div>
-
                             <div className="vpw-snapshot-list">
-                                {backlogItems.slice(0, 3).map((item) => (
-                                    <div key={item.id} className="vpw-snapshot-row">
-                                        <div>
-                                            <div className="vpw-snapshot-title">{item.title}</div>
-                                            <div className="vpw-snapshot-meta">{item.type} · {item.assignee} · {item.storyPoints} SP</div>
+                                {loading ? (
+                                    <div style={{ padding: '16px 0', color: '#AAA', fontSize: 13 }}>Cargando ítems...</div>
+                                ) : items.length === 0 ? (
+                                    <div style={{ padding: '16px 0', color: '#AAA', fontSize: 13 }}>No hay ítems en este proyecto.</div>
+                                ) : (
+                                    items.slice(0, 5).map((item) => (
+                                        <div key={item.id_work_item} className="vpw-snapshot-row">
+                                            <div>
+                                                <div className="vpw-snapshot-title">{item.title}</div>
+                                                <div className="vpw-snapshot-meta">
+                                                    {item.type || 'Tarea'}
+                                                    {item.assignee ? ` · ${item.assignee.username}` : ''}
+                                                    {item.story_points ? ` · ${item.story_points} SP` : ''}
+                                                </div>
+                                            </div>
+                                            <button
+                                                className="vpw-snapshot-btn"
+                                                onClick={() => navigate(`/projects/${id}/backlog/${item.id_work_item}`, { state: { projectName } })}
+                                            >
+                                                Ver
+                                            </button>
                                         </div>
-                                        <button className="vpw-snapshot-btn" onClick={() => navigate(`/projects/${id}/backlog/${item.id}`, { state: { projectName } })}>
-                                            Ver
-                                        </button>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
 
                     <aside className="vpw-side-column">
                         <div className="vpw-side-card">
-                            <div className="vpw-section-label">Foco del proyecto</div>
-                            <div className="vpw-side-text">
-                                Esta pantalla es solo visual. La interacción detallada de bloqueos vive dentro del detalle del work item.
-                            </div>
-                        </div>
-
-                        <div className="vpw-side-card">
-                            <div className="vpw-section-label">Alerta</div>
-                            <div className="vpw-alert-box">
-                                {blockedItems > 0 ? `${blockedItems} ítem(s) tienen bloqueadores activos.` : 'Sin bloqueadores activos.'}
+                            <div className="vpw-section-label">Navegación</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                                <button className="vpw-quick-action" onClick={() => navigate('/leaderboard')}>
+                                    Leaderboard
+                                </button>
+                                <button className="vpw-quick-action" onClick={() => navigate('/audit')}>
+                                    Auditoría
+                                </button>
                             </div>
                         </div>
                     </aside>
