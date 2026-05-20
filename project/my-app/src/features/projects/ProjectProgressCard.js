@@ -14,14 +14,18 @@ export default function ProjectProgressCard({ projectId }) {
                 if (res.ok) {
                     setProgress(data);
                     setTimeout(() => setAnimated(true), 60);
+                } else {
+                    setProgress(null);
                 }
             } catch {
-                // no bloquea la vista si falla
+                setProgress(null);
             } finally {
                 setLoading(false);
             }
         }
         fetchProgress();
+        const interval = setInterval(fetchProgress, 30000);
+        return () => clearInterval(interval);
     }, [projectId]);
 
     if (loading) {
