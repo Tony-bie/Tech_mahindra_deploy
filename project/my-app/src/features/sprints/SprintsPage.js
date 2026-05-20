@@ -85,6 +85,17 @@ export default function SprintsPage(){
         ? tasksByStatus?.all_sprints
         : tasksByStatus?.[statusFilter]
 
+    function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        if (isNaN(d)) return '—';
+        return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function statusLabel(status) {
+        return { planned: 'Planificado', active: 'Activo', done: 'Completado', cancelled: 'Cancelado' }[status] || status;
+    }
+
     return(
         <>
         <div className='topBar'>
@@ -102,7 +113,7 @@ export default function SprintsPage(){
                         {projectName}
                     </button>
                     <span className='sep'>/</span>
-                    <span className='crumbCurrent'>Sprint page</span>
+                    <span className='crumbCurrent'>Sprints</span>
                 </div>
 
                 {(user.role === "pm" || user.role === "admin") && (
@@ -117,39 +128,38 @@ export default function SprintsPage(){
         </div>
             <div className="sprint-toolbar">
             <div className="sprint-toolbar-left">
-                <label htmlFor="status">Filter state of sprints</label>
+                <label htmlFor="status">Filtrar por estado</label>
                 <select id="status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="All_sprints">All sprints</option>
-                <option value="planned">Planned</option>
-                <option value="active">Active</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="done">Done</option>
+                <option value="All_sprints">Todos</option>
+                <option value="planned">Planificado</option>
+                <option value="active">Activo</option>
+                <option value="cancelled">Cancelado</option>
+                <option value="done">Completado</option>
                 </select>
             </div>
             </div>
 
-            {/* En la tabla agrega el botón View */}
             <div className="sprint-table-card">
             <table>
                 <thead>
                 <tr>
-                    <th>Sprint</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th>
+                    <th>Sprint</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
                 {filteredSprints?.map(sprint => (
                     <tr key={sprint.id_sprint}>
                     <td>{sprint.name}</td>
-                    <td>{sprint.begin_at ? sprint.begin_at.slice(0, 10) : '—'}</td>
-                    <td>{sprint.deadline ? sprint.deadline.slice(0, 10) : '—'}</td>
-                    <td><span className={`badge badge-${sprint.status}`}>{sprint.status}</span></td>
+                    <td>{formatDate(sprint.begin_at)}</td>
+                    <td>{formatDate(sprint.deadline)}</td>
+                    <td><span className={`badge badge-${sprint.status}`}>{statusLabel(sprint.status)}</span></td>
                     <td>
                     <Link
                         key={sprint.id_sprint}
                         to={`/projects/${id}/sprint-board/${sprint.id_sprint}`}
                         state={{ sprint: sprint }}
                     >
-                        <button className="btn-view">View</button>
+                        <button className="btn-view">Ver</button>
                     </Link>
                     </td>
                     </tr>
@@ -162,7 +172,7 @@ export default function SprintsPage(){
 
         </div>
         </>
-        
+
     );
 }
 

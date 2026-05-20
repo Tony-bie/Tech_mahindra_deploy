@@ -10,9 +10,9 @@ const VALID_CATEGORIES = [
 ];
 
 const STATUS_CONFIG = {
-    pending:  { label: 'Pending',  bg: '#FFF8E1', color: '#E65100', border: '#FFE082' },
-    approved: { label: 'Approved', bg: '#E8F5E9', color: '#2E7D32', border: '#A5D6A7' },
-    rejected: { label: 'Rejected', bg: '#FFEBEE', color: '#C62828', border: '#EF9A9A' },
+    pending:  { label: 'Pendiente', bg: '#FFF8E1', color: '#E65100', border: '#FFE082' },
+    approved: { label: 'Aprobado',  bg: '#E8F5E9', color: '#2E7D32', border: '#A5D6A7' },
+    rejected: { label: 'Rechazado', bg: '#FFEBEE', color: '#C62828', border: '#EF9A9A' },
 };
 
 const CATEGORY_COLORS = {
@@ -22,7 +22,12 @@ const CATEGORY_COLORS = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = n => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
-const fmtDate = d => d ? String(d).slice(0, 10) : '—';
+const fmtDate = d => {
+    if (!d) return '—';
+    const dt = new Date(d);
+    if (isNaN(dt)) return '—';
+    return dt.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
 function KpiCard({ label, value, sub, accent }) {
     return (
@@ -207,13 +212,12 @@ export default function CostsPage() {
                         {projectName}
                     </span>
                     <span style={s.sep}>/</span>
-                    <span style={{ color: '#1A1A1A', fontWeight: 500 }}>Costs</span>
+                    <span style={{ color: '#1A1A1A', fontWeight: 500 }}>Costos</span>
                 </div>
-                <div style={{ fontSize: 11, color: '#AAA' }}>RF-14 · RF-15 · RF-16</div>
             </div>
 
             <div style={s.body}>
-                <h1 style={s.title}>Cost Management</h1>
+                <h1 style={s.title}>Gestión de costos</h1>
 
                 {/* ── Mensaje ──────────────────────────────────────────────── */}
                 {msg.text && (
@@ -223,7 +227,7 @@ export default function CostsPage() {
                 {/* ── KPI Cards ────────────────────────────────────────────── */}
                 <div style={s.kpiRow}>
                     <div style={s.kpi}>
-                        <div style={s.kpiLabel}>ESTIMATED BUDGET</div>
+                        <div style={s.kpiLabel}>PRESUPUESTO ESTIMADO</div>
                         {isPM && editBudget ? (
                             <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
                                 <input
@@ -247,25 +251,25 @@ export default function CostsPage() {
                                 )}
                             </div>
                         )}
-                        <div style={s.kpiSub}>Total project budget</div>
+                        <div style={s.kpiSub}>Presupuesto total del proyecto</div>
                     </div>
 
                     <KpiCard
-                        label="APPROVED COST"
+                        label="COSTO APROBADO"
                         value={fmt(summary.approved_cost)}
-                        sub={`${usedPct}% of budget used`}
+                        sub={`${usedPct}% del presupuesto usado`}
                         accent="#E65100"
                     />
                     <KpiCard
-                        label="PENDING APPROVAL"
+                        label="PENDIENTE DE APROBACIÓN"
                         value={fmt(summary.pending_cost)}
-                        sub={`${pendingCount} item${pendingCount !== 1 ? 's' : ''} awaiting PM`}
+                        sub={`${pendingCount} ítem${pendingCount !== 1 ? 's' : ''} en espera del PM`}
                         accent="#E07A00"
                     />
                     <KpiCard
-                        label="REMAINING BUDGET"
+                        label="PRESUPUESTO RESTANTE"
                         value={fmt(summary.remaining_budget)}
-                        sub={`${100 - usedPct}% available`}
+                        sub={`${100 - usedPct}% disponible`}
                         accent="#2E7D32"
                     />
                 </div>
@@ -273,10 +277,10 @@ export default function CostsPage() {
                 {/* ── Tabs ─────────────────────────────────────────────────── */}
                 <div style={s.tabs}>
                     {[
-                        { key: 'pending',  label: `Pending Approval${pendingCount ? ` (${pendingCount})` : ''}` },
-                        { key: 'approved', label: 'Approved' },
-                        { key: 'rejected', label: 'Rejected' },
-                        { key: 'all',      label: 'All Costs' },
+                        { key: 'pending',  label: `Pendientes${pendingCount ? ` (${pendingCount})` : ''}` },
+                        { key: 'approved', label: 'Aprobados' },
+                        { key: 'rejected', label: 'Rechazados' },
+                        { key: 'all',      label: 'Todos' },
                     ].map(t => (
                         <button
                             key={t.key}
@@ -293,14 +297,11 @@ export default function CostsPage() {
                     <div style={s.card}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                             <div>
-                                <div style={s.sectionTitle}>Costs Pending PM Approval</div>
-                                <div style={{ fontSize: 11, color: '#AAA', marginTop: 2 }}>
-                                    RF-15 · Approved costs impact metrics immediately
-                                </div>
+                                <div style={s.sectionTitle}>Costos pendientes de aprobación</div>
                             </div>
                             {pendingCount > 1 && (
                                 <button style={s.btnApproveAll} onClick={approveAll}>
-                                    Approve All Visible
+                                    Aprobar todos
                                 </button>
                             )}
                         </div>
@@ -312,7 +313,7 @@ export default function CostsPage() {
                                 <table style={s.table}>
                                     <thead>
                                         <tr>
-                                            {['CATEGORY','DESCRIPTION','AMOUNT','SUBMITTED BY','DATE','STATUS','ACTIONS'].map(h => (
+                                            {['CATEGORÍA','DESCRIPCIÓN','MONTO','ENVIADO POR','FECHA','ESTADO','ACCIONES'].map(h => (
                                                 <th key={h} style={s.th}>{h}</th>
                                             ))}
                                         </tr>
@@ -329,10 +330,10 @@ export default function CostsPage() {
                                                 <td style={s.td}>
                                                     <div style={{ display: 'flex', gap: 6 }}>
                                                         <button style={s.btnApprove} onClick={() => decide(spend.id_spend, 'approved')}>
-                                                            Approve
+                                                            Aprobar
                                                         </button>
                                                         <button style={s.btnReject} onClick={() => decide(spend.id_spend, 'rejected')}>
-                                                            Reject
+                                                            Rechazar
                                                         </button>
                                                     </div>
                                                 </td>
@@ -344,7 +345,7 @@ export default function CostsPage() {
                         )}
 
                         <div style={{ marginTop: 12, fontSize: 12, color: '#E65100' }}>
-                            ⚠ Approving costs updates the Approved Cost Accumulated metric in real time (RF-16)
+                            ⚠ Aprobar un costo actualiza el acumulado en tiempo real
                         </div>
                     </div>
                 )}
@@ -353,7 +354,7 @@ export default function CostsPage() {
                 {(tab !== 'pending' || !isPM) && (
                     <div style={s.card}>
                         <div style={s.sectionTitle}>
-                            {tab === 'approved' ? 'Approved Costs' : tab === 'rejected' ? 'Rejected Costs' : tab === 'all' ? 'All Costs' : 'My Costs'}
+                            {tab === 'approved' ? 'Costos aprobados' : tab === 'rejected' ? 'Costos rechazados' : tab === 'all' ? 'Todos los costos' : 'Mis costos'}
                         </div>
                         {loading ? (
                             <div style={s.empty}>Cargando...</div>
@@ -364,7 +365,7 @@ export default function CostsPage() {
                                 <table style={s.table}>
                                     <thead>
                                         <tr>
-                                            {['CATEGORY','DESCRIPTION','AMOUNT','SUBMITTED BY','DATE','STATUS'].map(h => (
+                                            {['CATEGORÍA','DESCRIPCIÓN','MONTO','ENVIADO POR','FECHA','ESTADO'].map(h => (
                                                 <th key={h} style={s.th}>{h}</th>
                                             ))}
                                         </tr>
@@ -390,20 +391,18 @@ export default function CostsPage() {
                 {/* ── Formulario: Registrar costo (HU-12) ──────────────────── */}
                 <div style={s.card}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                        <div style={s.sectionTitle}>Submit a Cost</div>
-                        <div style={{ fontSize: 11, color: '#AAA' }}>RF-14 · Viewer submits · stored as pending until PM approves</div>
+                        <div style={s.sectionTitle}>Registrar costo</div>
                     </div>
 
                     <div style={s.infoBox}>
-                        Costs submitted here will have <strong>Pending</strong> status.
-                        They will only impact official budget metrics after PM approval.
+                        Los costos registrados tendrán estado <strong>Pendiente</strong> hasta que el PM los apruebe.
                     </div>
 
                     <div style={s.formGrid}>
                         <div style={s.formGroup}>
-                            <label style={s.label}>Category *</label>
+                            <label style={s.label}>Categoría *</label>
                             <select style={s.input} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                                <option value="">— Select category (CA-01) —</option>
+                                <option value="">— Seleccionar categoría —</option>
                                 {VALID_CATEGORIES.map(c => (
                                     <option key={c} value={c}>{c}</option>
                                 ))}
@@ -411,7 +410,7 @@ export default function CostsPage() {
                         </div>
 
                         <div style={s.formGroup}>
-                            <label style={s.label}>Amount (USD, &gt; $0) *</label>
+                            <label style={s.label}>Monto (USD) *</label>
                             <input
                                 style={s.input} type="number" min="0.01" step="0.01"
                                 placeholder="0.00" value={form.amount}
@@ -420,17 +419,17 @@ export default function CostsPage() {
                         </div>
 
                         <div style={{ ...s.formGroup, gridColumn: '1 / -1' }}>
-                            <label style={s.label}>Description *</label>
+                            <label style={s.label}>Descripción *</label>
                             <input
                                 style={s.input} type="text"
-                                placeholder="What is this cost for? Be specific."
+                                placeholder="¿Para qué es este costo? Sé específico."
                                 value={form.description}
                                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                             />
                         </div>
 
                         <div style={s.formGroup}>
-                            <label style={s.label}>Date *</label>
+                            <label style={s.label}>Fecha *</label>
                             <input
                                 style={s.input} type="date" value={form.spend_date}
                                 onChange={e => setForm(f => ({ ...f, spend_date: e.target.value }))}
@@ -440,10 +439,10 @@ export default function CostsPage() {
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
                         <button style={s.btnCancel} onClick={() => setForm({ category: '', amount: '', description: '', spend_date: '' })}>
-                            Cancel
+                            Cancelar
                         </button>
                         <button style={s.btnSubmit} onClick={handleSubmit} disabled={submitting}>
-                            {submitting ? 'Submitting...' : 'Submit'}
+                            {submitting ? 'Enviando...' : 'Enviar'}
                         </button>
                     </div>
                 </div>
@@ -460,7 +459,7 @@ const s = {
     breadcrumb:  { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 },
     crumb:       { color: '#888', cursor: 'pointer', fontSize: 13 },
     sep:         { color: '#CCC' },
-    body:        { padding: '28px 32px', maxWidth: 1200 },
+    body:        { padding: '28px 32px', width: '100%', boxSizing: 'border-box' },
     title:       { fontSize: 24, fontWeight: 700, marginBottom: 20 },
     msgOk:       { padding: '10px 14px', backgroundColor: '#F1F8E9', border: '1px solid #C5E1A5', borderRadius: 6, color: '#33691E', fontSize: 13, marginBottom: 16 },
     msgErr:      { padding: '10px 14px', backgroundColor: '#FFF5F5', border: '1px solid #FFCDD2', borderRadius: 6, color: '#B71C1C', fontSize: 13, marginBottom: 16 },
