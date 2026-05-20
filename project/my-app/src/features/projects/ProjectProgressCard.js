@@ -38,13 +38,20 @@ export default function ProjectProgressCard({ projectId }) {
 
     if (!progress) return null;
 
-    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales } = progress;
+    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo } = progress;
 
     const sign = desviacion > 0 ? '+' : '';
     const desviacionStr = `${sign}${desviacion.toFixed(2)}%`;
 
     const statusLabel = desviacion > 1 ? 'Adelantado' : desviacion < -1 ? 'Atrasado' : 'En tiempo';
     const statusMod   = desviacion > 1 ? 'ahead'       : desviacion < -1 ? 'behind'    : 'ontime';
+
+    const semMap = {
+        rojo:     { label: 'Rojo',     dot: '#CC0000',  color: '#B71C1C', bg: '#FDECEC' },
+        amarillo: { label: 'Amarillo', dot: '#E8A000',  color: '#8A5A00', bg: '#FFF3D9' },
+        verde:    { label: 'Verde',    dot: '#3C9A57',  color: '#2E7D32', bg: '#E7F6EA' },
+    };
+    const sm = semMap[semaforo] || null;
 
     return (
         <div className="ppc-card">
@@ -53,7 +60,20 @@ export default function ProjectProgressCard({ projectId }) {
                     <div className="ppc-kicker">Avance del proyecto</div>
                     <div className="ppc-card-title">Planificado vs Real</div>
                 </div>
-                <span className={`ppc-badge ppc-badge--${statusMod}`}>{statusLabel}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {sm && (
+                        <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
+                            borderRadius: 999, padding: '3px 10px',
+                            fontSize: 10, fontWeight: 700,
+                            color: sm.color, backgroundColor: sm.bg,
+                        }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: sm.dot, flexShrink: 0 }} />
+                            {sm.label}
+                        </span>
+                    )}
+                    <span className={`ppc-badge ppc-badge--${statusMod}`}>{statusLabel}</span>
+                </div>
             </div>
 
             <div className="ppc-body">

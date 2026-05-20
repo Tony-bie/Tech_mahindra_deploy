@@ -1,6 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { fmtMoney, fmtPct, styles } from './dashboard.utils';
 
+function getSemaphore(semaforo) {
+    if (semaforo === 'rojo')     return { label: 'Rojo',     color: '#B71C1C', bg: '#FDECEC', dot: '#CC0000'  };
+    if (semaforo === 'amarillo') return { label: 'Amarillo', color: '#8A5A00', bg: '#FFF3D9', dot: '#E8A000'  };
+    if (semaforo === 'verde')    return { label: 'Verde',    color: '#2E7D32', bg: '#E7F6EA', dot: '#3C9A57'  };
+    return null;
+}
+
 export default function ProjectsTable({ projects }) {
     const navigate = useNavigate();
 
@@ -58,8 +65,32 @@ export default function ProjectsTable({ projects }) {
                                             <span style={styles.muted}>No disponible</span>
                                         )}
                                     </td>
-                                    <td style={s.td}><span style={styles.muted} title="Pendiente de Sprint 3">No disponible</span></td>
-                                    <td style={s.td}><span style={styles.muted} title="Pendiente de Sprint 3">No disponible</span></td>
+                                    <td style={s.td}>
+                                        {p.desviacion != null ? (
+                                            <span style={{ color: p.desviacion < 0 ? '#C62828' : '#2E7D32', fontWeight: 600 }}>
+                                                {p.desviacion > 0 ? '+' : ''}{Number(p.desviacion).toFixed(2)}%
+                                            </span>
+                                        ) : (
+                                            <span style={styles.muted}>—</span>
+                                        )}
+                                    </td>
+                                    <td style={s.td}>
+                                        {(() => {
+                                            const sm = getSemaphore(p.semaforo);
+                                            if (!sm) return <span style={styles.muted}>—</span>;
+                                            return (
+                                                <span style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                                                    borderRadius: 999, padding: '2px 10px',
+                                                    fontSize: 10, fontWeight: 700,
+                                                    color: sm.color, backgroundColor: sm.bg,
+                                                }}>
+                                                    <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: sm.dot, flexShrink: 0 }} />
+                                                    {sm.label}
+                                                </span>
+                                            );
+                                        })()}
+                                    </td>
                                     <td style={s.td}>{fmtMoney(p.costo_aprobado)}</td>
                                     <td style={s.td}>
                                         {p.riesgos_activos > 0

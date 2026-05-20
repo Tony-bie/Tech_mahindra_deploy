@@ -9,7 +9,7 @@ async function getAdminDashboard(req, res) {
     try {
         // ── Queries en lote ──────────────────────────────────────────────────
 
-        // 1. Proyectos
+        // 1. Proyectos (incluye deadline para semáforo HU-16)
         const { data: projects, error: projErr } = await supabase
             .from('project')
             .select('id_project, project_name, client_name, estimated_sp, deadline');
@@ -53,6 +53,13 @@ async function getAdminDashboard(req, res) {
             .select('id_project')
             .eq('status', 'active');
         if (riskErr) return res.status(500).json({ error: riskErr.message });
+
+        // 6b. Blockers para semáforo HU-16
+        const { data: blockersAll } = await supabase
+            .from('blocker_implication')
+            .select('id_project, severity, approval_status')
+            .eq('kind', 'blocker')
+            .in('approval_status', ['pending', 'approved']);
 
         // 7. Users + roles
         const { data: users, error: usersErr } = await supabase
@@ -98,10 +105,21 @@ async function getAdminDashboard(req, res) {
             riesgosByProject[r.id_project] = (riesgosByProject[r.id_project] || 0) + 1;
         }
 
+        const now = new Date();
         const projectRows = (projects || []).map(p => {
-            const doneSp = doneSpByProject[p.id_project] || 0;
-            const estimated = p.estimated_sp;
+            const doneSp      = doneSpByProject[p.id_project] || 0;
+            const estimated   = p.estimated_sp;
             const avance_real = (estimated && estimated > 0) ? doneSp / estimated : null;
+
+            // Semáforo HU-16 (reglas de override + deadline)
+            const projBlockers   = (blockersAll || []).filter(b => b.id_project === p.id_project);
+            const hasCritical    = projBlockers.some(b => b.severity === 'critical');
+            const hasMedium      = projBlockers.some(b => b.severity === 'medium' && b.approval_status === 'pending');
+            const deadlinePassed = p.deadline && new Date(p.deadline) < now && (avance_real === null || avance_real < 1);
+            let semaforo = 'verde';
+            if (hasCritical || deadlinePassed) semaforo = 'rojo';
+            else if (hasMedium)               semaforo = 'amarillo';
+
             return {
                 id_project: p.id_project,
                 project_name: p.project_name,
@@ -110,7 +128,7 @@ async function getAdminDashboard(req, res) {
                 costo_aprobado: costoByProject[p.id_project] || 0,
                 riesgos_activos: riesgosByProject[p.id_project] || 0,
                 desviacion: null,
-                semaforo: null,
+                semaforo,
             };
         });
 
@@ -210,7 +228,6 @@ async function getAdminDashboard(req, res) {
             .slice(0, 10);
 
         // ── Vencimientos: deadlines proximos y items overdue ─────────────────
-        const now = new Date();
         const in30 = new Date();
         in30.setDate(in30.getDate() + 30);
 

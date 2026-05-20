@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import './ViewerProjectsTable.css';
 
-/* Semáforo basado en desviación real (lógica completa en Phase C / RF-11) */
+/* Semáforo HU-16 — consume campo `semaforo` calculado en el backend */
 function getSemaphore(prog) {
-    if (!prog) return { label: '—', color: '#AAA', bg: '#F5F5F4' };
-    const dev = prog.desviacion;
-    if (dev <= -20) return { label: 'Rojo',     color: '#B71C1C', bg: '#FDECEC' };
-    if (dev <= -5)  return { label: 'Amarillo', color: '#8A5A00', bg: '#FFF3D9' };
-    return               { label: 'Verde',    color: '#2E7D32', bg: '#E7F6EA' };
+    if (!prog || !prog.semaforo) return { label: '—',         color: '#AAA',     bg: '#F5F5F4',  dot: '#CCC'     };
+    if (prog.semaforo === 'rojo')     return { label: 'Rojo',     color: '#B71C1C',  bg: '#FDECEC',  dot: '#CC0000'  };
+    if (prog.semaforo === 'amarillo') return { label: 'Amarillo', color: '#8A5A00',  bg: '#FFF3D9',  dot: '#E8A000'  };
+    return                                   { label: 'Verde',    color: '#2E7D32',  bg: '#E7F6EA',  dot: '#3C9A57'  };
 }
 
 /* ─── Viewer Management Modal ───────────────────────────────────────── */
@@ -308,6 +307,10 @@ export default function ViewerProjectsTable({ user }) {
                                                         '--vpt-semaphore-bg':    semaphore.bg,
                                                     }}
                                                 >
+                                                    <span
+                                                        className="vpt-semaphore-dot"
+                                                        style={{ backgroundColor: semaphore.dot }}
+                                                    />
                                                     {semaphore.label}
                                                 </span>
                                             </td>
