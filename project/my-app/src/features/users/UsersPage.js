@@ -23,5 +23,5 @@ const s = {
     page:       { minHeight:'100vh', backgroundColor:'#F5F5F4', fontFamily:"'DM Sans','Helvetica Neue',sans-serif", color:'#1A1A1A' },
     topBar:     { backgroundColor:'#FFF', borderBottom:'1px solid #E5E5E3', padding:'0 32px', height:56, display:'flex', alignItems:'center' },
     breadcrumb: { display:'flex', alignItems:'center', gap:8, fontSize:13, color:'#888' },
-    body:       { padding:32, maxWidth:1200 },
+    body:       { padding: 0 },
 };
