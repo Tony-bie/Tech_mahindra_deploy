@@ -492,7 +492,7 @@ async function getProjectProgress(req, res) {
 
         const { data: project, error: projErr } = await supabase
             .from('project')
-            .select('id_project, id_pm, estimated_sp')
+            .select('id_project, id_pm, estimated_sp, deadline')
             .eq('id_project', projectId)
             .single();
 
@@ -572,6 +572,37 @@ async function getProjectProgress(req, res) {
             costo_aprobado = (approvedSpends || []).reduce((acc, s) => acc + (s.spendmoney || 0), 0);
         }
 
+        // ── Semáforo HU-16 ───────────────────────────────────────────────────────
+        // Override 1 — blocker crítico pendiente o aprobado → rojo
+        // Override 2 — blocker medio pendiente             → amarillo
+        // Regla desviación: <= -20 → rojo; <= -5 → amarillo; else → verde
+        // Regla deadline: plazo vencido con avance < 100%  → rojo
+        const { data: critBlockers } = await supabase
+            .from('blocker_implication')
+            .select('id_blocker')
+            .eq('id_project', projectId)
+            .eq('kind', 'blocker')
+            .eq('severity', 'critical')
+            .in('approval_status', ['pending', 'approved'])
+            .limit(1);
+
+        const { data: medBlockers } = await supabase
+            .from('blocker_implication')
+            .select('id_blocker')
+            .eq('id_project', projectId)
+            .eq('kind', 'blocker')
+            .eq('severity', 'medium')
+            .eq('approval_status', 'pending')
+            .limit(1);
+
+        const hasCritical    = Array.isArray(critBlockers) && critBlockers.length > 0;
+        const hasMedium      = Array.isArray(medBlockers)  && medBlockers.length  > 0;
+        const deadlinePassed = project.deadline && new Date(project.deadline) < new Date() && avance_real < 100;
+
+        let semaforo = 'verde';
+        if (hasCritical || desviacion <= -20 || deadlinePassed) semaforo = 'rojo';
+        else if (hasMedium || desviacion <= -5)                 semaforo = 'amarillo';
+
         return res.status(200).json({
             avance_real,
             avance_esperado,
@@ -580,6 +611,7 @@ async function getProjectProgress(req, res) {
             sp_esperados,
             sp_totales,
             costo_aprobado,
+            semaforo,
         });
     } catch (error) {
         return res.status(500).json({ error: error.message });
