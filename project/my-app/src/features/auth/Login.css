@@ -16,6 +16,12 @@
   width: 100%;
   max-width: 300px;
 }
+
+.login-logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
 .login-form div {
   display: flex;
   flex-direction: column;
@@ -24,8 +30,10 @@
 .login-input{
     -webkit-border-radius: 5px;
     border-radius: 5px;
-    height: 25px;
+    height: 38px;
+    padding: 0 12px;
     border: 1px solid #E5dfd3;
+    box-sizing: border-box;
 }
 
 .login-credential{

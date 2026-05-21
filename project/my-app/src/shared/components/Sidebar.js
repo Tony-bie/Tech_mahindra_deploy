@@ -6,6 +6,7 @@ import {
     VIEWER_GLOBAL_ITEMS,
 } from './Sidebar.constants';
 import SidebarProjectSection from './SidebarProjectSection';
+import TechMahindraLogo from './TechMahindraLogo';
 import './Sidebar.css';
 
 /** Extrae iniciales del username para el avatar */
@@ -81,15 +82,7 @@ export default function Sidebar({ onLogout }) {
 
             {/* ── Logo ─────────────────────────────────────────────────────── */}
             <div className="sb-logo-wrap">
-                <div className="sb-logo-box">
-                    <div className="sb-logo-icon">T</div>
-                    <div>
-                        <div className="sb-logo-text">
-                            {isViewer ? 'Viewer' : 'TECH'}
-                        </div>
-                        <div className="sb-logo-sub">Mahindra PM</div>
-                    </div>
-                </div>
+                <TechMahindraLogo width={130} dark />
             </div>
 
             {/* ── Navegación ───────────────────────────────────────────────── */}
