@@ -69,40 +69,6 @@
   gap: 10px;
 }
 
-.sb-logo-icon {
-  width: 30px;
-  height: 30px;
-  background-color: var(--sb-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--sb-radius);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  flex-shrink: 0;
-  letter-spacing: -0.5px;
-  transition: background-color var(--sb-transition);
-}
-
-.sb-logo-box:hover .sb-logo-icon {
-  background-color: var(--sb-accent-bright);
-}
-
-.sb-logo-text {
-  color: var(--sb-text-primary);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.02em;
-}
-
-.sb-logo-sub {
-  color: var(--sb-text-muted);
-  font-size: 10.5px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-}
 
 /* ── Secciones ── */
 .sb-section {
