@@ -80,7 +80,11 @@ async function createRisk(req, res) {
             action:    'CREATE_RISK',
             entity:    'risk',
             entity_id: String(risk.id_risk),
-            payload:   { project_id: id_project, level },
+            payload:   {
+                project_id: id_project,
+                before:     null,
+                after:      { title, level, status: 'active' },
+            },
         }]);
 
         return res.status(201).json({ message: 'Riesgo registrado', risk });
@@ -131,7 +135,11 @@ async function updateRiskStatus(req, res) {
             action:    status === 'closed' ? 'CLOSE_RISK' : 'DISCARD_RISK',
             entity:    'risk',
             entity_id: String(riskId),
-            payload:   { project_id: risk.id_project },
+            payload:   {
+                project_id: risk.id_project,
+                before:     { status: 'active', level: risk.level, title: risk.title },
+                after:      { status },
+            },
         }]);
 
         return res.status(200).json({
