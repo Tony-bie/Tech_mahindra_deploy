@@ -18,10 +18,16 @@ const STATUS_META = {
 
 function formatDate(value) {
     if (!value) return '—';
-    const d = new Date(value);
-    return Number.isNaN(d.getTime())
-        ? value
-        : d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    const s = String(value);
+    // Supabase devuelve TIMESTAMPTZ sin 'Z'; sin sufijo el browser lo parsea como hora local.
+    // Forzar UTC explícitamente antes de convertir a zona horaria de México.
+    const utc = /Z|[+-]\d{2}:?\d{2}$/.test(s) ? s : s + 'Z';
+    const d = new Date(utc);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleDateString('es-ES', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        timeZone: 'America/Mexico_City',
+    });
 }
 
 export default function ProjectRisksPage() {
