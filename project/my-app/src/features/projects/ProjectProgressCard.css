@@ -159,6 +159,101 @@
     flex-shrink: 0;
 }
 
+/* ── Risk Score section ─────────────────────────── */
+.ppc-score-section {
+    border-top: 1px solid #EDEAE3;
+    margin-top: 20px;
+    padding-top: 18px;
+    display: grid;
+    gap: 12px;
+}
+
+.ppc-score-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.ppc-score-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8A8A8A;
+    font-weight: 700;
+}
+
+.ppc-score-value {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: #2C2C2C;
+}
+
+.ppc-score-max {
+    font-size: 12px;
+    color: #AAA;
+}
+
+.ppc-score-track {
+    height: 5px;
+    background: #EDEAE3;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.ppc-score-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ppc-factors {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px 24px;
+}
+
+.ppc-factor {
+    display: grid;
+    grid-template-areas:
+        "name  max"
+        "desc  max";
+    grid-template-columns: 1fr auto;
+    gap: 2px 8px;
+}
+
+.ppc-factor-name {
+    grid-area: name;
+    font-size: 11px;
+    font-weight: 600;
+    color: #4A4A4A;
+}
+
+.ppc-factor-desc {
+    grid-area: desc;
+    font-size: 10px;
+    color: #ADADAD;
+}
+
+.ppc-factor-max {
+    grid-area: max;
+    align-self: center;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 11px;
+    color: #8A8A8A;
+}
+
+.ppc-score-legend {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+}
+
+.ppc-legend-sep {
+    color: #CCC;
+}
+
 /* ── Skeleton ───────────────────────────────────── */
 .ppc-skeleton {
     height: 96px;
@@ -202,4 +297,8 @@
     .ppc-metric-divider { display: none; }
 
     .ppc-metric-num { font-size: 18px; }
+
+    .ppc-factors {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }

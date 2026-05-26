@@ -5,6 +5,9 @@ validateEnv();
 
 const app = require('./src/app');
 
+// RF-21: cálculo diario del Risk Score
+require('./src/modules/semaphore/semaphore.job');
+
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {

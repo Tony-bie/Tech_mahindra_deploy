@@ -298,7 +298,7 @@ const s = {
     sep:         { color: '#CCC' },
     crumbCurrent:{ color: '#1A1A1A', fontWeight: 500, fontSize: 13 },
     backBtn:     { height: 36, padding: '0 16px', backgroundColor: '#1A1A1A', color: '#FFF', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-    body:        { padding: 32, maxWidth: 1100 },
+    body:        { padding: 32 },
     headerCard:  { backgroundColor: '#FFF', border: '1px solid #E7E4DD', borderRadius: 8, padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20 },
     kicker:      { fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8A8A', fontWeight: 700, marginBottom: 8 },
     title:       { fontSize: 26, lineHeight: 1.1, margin: 0, marginBottom: 8 },

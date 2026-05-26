@@ -38,7 +38,7 @@ export default function ProjectProgressCard({ projectId }) {
 
     if (!progress) return null;
 
-    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo } = progress;
+    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo, risk_score } = progress;
 
     const sign = desviacion > 0 ? '+' : '';
     const desviacionStr = `${sign}${desviacion.toFixed(2)}%`;
@@ -129,6 +129,50 @@ export default function ProjectProgressCard({ projectId }) {
                     </div>
                 </div>
             </div>
+
+            {risk_score != null && (
+                <div className="ppc-score-section">
+                    <div className="ppc-score-header">
+                        <span className="ppc-score-label">Score de riesgo</span>
+                        <span className="ppc-score-value">
+                            {risk_score}
+                            <span className="ppc-score-max"> / 100</span>
+                        </span>
+                    </div>
+                    <div className="ppc-score-track">
+                        <div
+                            className="ppc-score-fill"
+                            style={{
+                                width: animated ? `${risk_score}%` : '0%',
+                                background: risk_score >= 70 ? '#CC0000' : risk_score >= 40 ? '#E8A000' : '#3C9A57',
+                            }}
+                        />
+                    </div>
+                    <div className="ppc-factors">
+                        {[
+                            { label: 'Desviación de avance', desc: 'retraso vs. sprints vencidos',    max: 25 },
+                            { label: 'Cercanía al deadline', desc: 'días restantes al cierre',         max: 20 },
+                            { label: 'Presupuesto',          desc: 'gasto aprobado vs. total',         max: 20 },
+                            { label: 'Bloqueadores',         desc: 'críticos o medios activos',        max: 15 },
+                            { label: 'Riesgos activos',      desc: 'nivel alto / medio / bajo',        max: 10 },
+                            { label: 'Velocidad de cierre',  desc: 'SP cerrados en los últimos 7 días', max: 10 },
+                        ].map(f => (
+                            <div key={f.label} className="ppc-factor">
+                                <span className="ppc-factor-name">{f.label}</span>
+                                <span className="ppc-factor-desc">{f.desc}</span>
+                                <span className="ppc-factor-max">+{f.max}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="ppc-score-legend">
+                        <span style={{ color: '#3C9A57', fontWeight: 700 }}>Verde 0–39</span>
+                        <span className="ppc-legend-sep">·</span>
+                        <span style={{ color: '#8A5A00', fontWeight: 700 }}>Amarillo 40–69</span>
+                        <span className="ppc-legend-sep">·</span>
+                        <span style={{ color: '#B71C1C', fontWeight: 700 }}>Rojo 70–100</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
