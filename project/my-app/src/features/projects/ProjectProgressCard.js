@@ -47,9 +47,9 @@ export default function ProjectProgressCard({ projectId }) {
     const statusMod   = desviacion > 1 ? 'ahead'       : desviacion < -1 ? 'behind'    : 'ontime';
 
     const semMap = {
-        rojo:     { label: 'Rojo',     dot: '#CC0000',  color: '#B71C1C', bg: '#FDECEC' },
-        amarillo: { label: 'Amarillo', dot: '#E8A000',  color: '#8A5A00', bg: '#FFF3D9' },
-        verde:    { label: 'Verde',    dot: '#3C9A57',  color: '#2E7D32', bg: '#E7F6EA' },
+        rojo:     { label: 'Rojo',     dot: '#CC0000',  color: '#B71C1C' },
+        amarillo: { label: 'Amarillo', dot: '#E8A000',  color: '#8A5A00' },
+        verde:    { label: 'Verde',    dot: '#3C9A57',  color: '#2E7D32' },
     };
     const sm = semMap[semaforo] || null;
 
@@ -64,9 +64,7 @@ export default function ProjectProgressCard({ projectId }) {
                     {sm && (
                         <span style={{
                             display: 'inline-flex', alignItems: 'center', gap: 5,
-                            borderRadius: 999, padding: '3px 10px',
-                            fontSize: 10, fontWeight: 700,
-                            color: sm.color, backgroundColor: sm.bg,
+                            fontSize: 11, fontWeight: 700, color: sm.color,
                         }}>
                             <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: sm.dot, flexShrink: 0 }} />
                             {sm.label}

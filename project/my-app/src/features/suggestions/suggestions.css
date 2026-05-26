@@ -132,10 +132,7 @@
 .sg-count-badge {
   font-size: 11px;
   font-weight: 600;
-  color: #888;
-  background: #F0EEE9;
-  padding: 2px 8px;
-  border-radius: 99px;
+  color: #AAA;
 }
 
 table {
@@ -189,13 +186,11 @@ tbody td {
   vertical-align: middle;
 }
 
-/* ── Status badges ── */
+/* ── Status labels ── */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 10px;
-  border-radius: 999px;
   font-size: 11.5px;
   font-weight: 600;
 }
@@ -208,16 +203,10 @@ tbody td {
   flex-shrink: 0;
 }
 
-.badge-red {
-  background: #FDECEA;
-  color: #C62828;
-}
+.badge-red    { color: #C62828; }
 .badge-red::before    { background: #EF5350; }
 
-.badge-yellow {
-  background: #FFFDE7;
-  color: #F57F17;
-}
+.badge-yellow { color: #F57F17; }
 .badge-yellow::before { background: #FFB300; }
 
 /* ── AI Chat panel (light) ── */

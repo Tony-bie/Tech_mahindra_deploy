@@ -3,15 +3,15 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import api from '../../config/api';
 
 function severityMeta(severity) {
-    if (severity === 'critical') return { label: 'Crítico', color: '#B71C1C', bg: '#FDECEC' };
-    if (severity === 'medium') return { label: 'Medio', color: '#8A5A00', bg: '#FFF3D9' };
-    return { label: 'Bajo', color: '#2E7D32', bg: '#E7F6EA' };
+    if (severity === 'critical') return { label: 'Crítico', color: '#B71C1C' };
+    if (severity === 'medium') return { label: 'Medio', color: '#8A5A00' };
+    return { label: 'Bajo', color: '#2E7D32' };
 }
 
 function approvalStatusMeta(status) {
-    if (status === 'approved') return { label: 'Aprobado', color: '#2E7D32', bg: '#E7F6EA' };
-    if (status === 'rejected') return { label: 'Rechazado', color: '#B71C1C', bg: '#FDECEC' };
-    return { label: 'Pendiente', color: '#8A5A00', bg: '#FFF3D9' };
+    if (status === 'approved') return { label: 'Aprobado', color: '#2E7D32' };
+    if (status === 'rejected') return { label: 'Rechazado', color: '#B71C1C' };
+    return { label: 'Pendiente', color: '#8A5A00' };
 }
 
 function formatDate(value) {
@@ -177,8 +177,9 @@ export default function ProjectBlockersPage() {
                                             <div style={s.cardTitle}>{blocker.description}</div>
                                         </div>
                                         <div style={s.chips}>
-                                            <span style={{ ...s.chip, color: severity.color, backgroundColor: severity.bg }}>{severity.label}</span>
-                                            <span style={{ ...s.chip, color: approval.color, backgroundColor: approval.bg }}>{approval.label}</span>
+                                            <span style={{ color: severity.color, fontWeight: 700, fontSize: 12 }}>{severity.label}</span>
+                                            <span style={s.chipSep}>·</span>
+                                            <span style={{ color: approval.color, fontWeight: 700, fontSize: 12 }}>{approval.label}</span>
                                         </div>
                                     </div>
 
@@ -241,7 +242,7 @@ const s = {
     kicker: { fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8A8A', fontWeight: 700, marginBottom: 8 },
     title: { fontSize: 28, lineHeight: 1.1, margin: 0, marginBottom: 10 },
     subtitle: { fontSize: 13, color: '#6C6C6C', lineHeight: 1.5, maxWidth: 780, margin: 0 },
-    tag: { display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '6px 10px', fontSize: 10, fontWeight: 700, color: '#2453C9', backgroundColor: '#E7EEFF' },
+    tag: { fontSize: 13, color: '#8A8A8A', fontWeight: 500 },
     errorBox: { padding: '10px 14px', marginBottom: 14, borderRadius: 4, fontSize: 13, backgroundColor: '#FFF5F5', border: '1px solid #FFCDD2', color: '#B71C1C' },
     successBox: { padding: '10px 14px', marginBottom: 14, borderRadius: 4, fontSize: 13, backgroundColor: '#F1F8E9', border: '1px solid #C5E1A5', color: '#33691E' },
     emptyState: { padding: 24, backgroundColor: '#FFF', border: '1px solid #E7E4DD', borderRadius: 8, color: '#7B7B7B', fontSize: 13 },
@@ -250,8 +251,8 @@ const s = {
     cardTop: { display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', marginBottom: 12 },
     cardLabel: { fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8A8A', fontWeight: 700, marginBottom: 6 },
     cardTitle: { fontSize: 16, fontWeight: 700, color: '#2C2C2C', lineHeight: 1.35 },
-    chips: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' },
-    chip: { display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '5px 10px', fontSize: 11, fontWeight: 700 },
+    chips: { display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' },
+    chipSep: { color: '#CCC', fontSize: 12 },
     cardBody: { fontSize: 13, color: '#6C6C6C', lineHeight: 1.55, marginBottom: 14 },
     metaGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 14 },
     metaItem: { display: 'grid', gap: 4, padding: 12, borderRadius: 6, backgroundColor: '#FAF8F5', border: '1px solid #F0EAE0' },

@@ -19,6 +19,7 @@ import SprintBoard    from '../features/sprintBoard/SprintBoard';
 import WorkItemsPage  from '../features/work_items/WorkItemsPage';
 import CostsPage      from '../features/costs/CostsPage';
 import ProjectBlockersPage from '../features/projects/ProjectBlockersPage';
+import ProjectRisksPage    from '../features/risks/ProjectRisksPage';
 import Suggestions from '../features/suggestions/suggestions';
 import ScrollToTop from '../shared/components/ScrollToTop';
 
@@ -113,6 +114,15 @@ export default function AppRouter() {
                             element={
                                 <ProtectedRoute roles={['pm', 'admin']}>
                                     <ProjectBlockersPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/projects/:id/risks"
+                            element={
+                                <ProtectedRoute roles={['pm', 'admin']}>
+                                    <ProjectRisksPage />
                                 </ProtectedRoute>
                             }
                         />

@@ -284,13 +284,11 @@
   text-overflow: ellipsis;
 }
 
-/* ── Status pills ── */
+/* ── Status labels ── */
 .wi-status {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 10px;
-  border-radius: 999px;
   font-size: 11.5px;
   font-weight: 600;
   white-space: nowrap;
@@ -304,11 +302,11 @@
   flex-shrink: 0;
 }
 
-.wi-status--done        { background: #E8F5E9; color: #2E7D32; }
+.wi-status--done        { color: #2E7D32; }
 .wi-status--done::before        { background: #4CAF50; }
-.wi-status--in_progress { background: #E8EAF6; color: #3949AB; }
+.wi-status--in_progress { color: #3949AB; }
 .wi-status--in_progress::before { background: #5C6BC0; }
-.wi-status--todo        { background: #F5F5F4; color: #666; }
+.wi-status--todo        { color: #666; }
 .wi-status--todo::before        { background: #BBBBB8; }
 
 /* ── Assignee badge ── */

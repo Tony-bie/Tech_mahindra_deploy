@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import api from '../../config/api';
+import { useAuthContext } from '../../shared/context/AuthContext';
 import ProjectProgressCard from './ProjectProgressCard';
 import './ViewerProjectWorkspacePage.css';
 
@@ -13,6 +14,9 @@ export default function ViewerProjectWorkspacePage() {
     const [items,         setItems]         = useState([]);
     const [activeSprint,  setActiveSprint]  = useState(null);
     const [loading,       setLoading]       = useState(true);
+    const [activeRisks,   setActiveRisks]   = useState(0);
+    const { user } = useAuthContext();
+    const isPM = user?.role === 'pm' || user?.role === 'admin';
 
     const loadData = useCallback(async () => {
         try {
@@ -35,6 +39,13 @@ export default function ViewerProjectWorkspacePage() {
         } finally {
             setLoading(false);
         }
+
+        try {
+            const { res: riskRes, data: riskData } = await api.get(`/risks?project_id=${id}`);
+            if (riskRes.ok) {
+                setActiveRisks((riskData.risks || []).filter(r => r.status === 'active').length);
+            }
+        } catch { /* no bloquea la vista */ }
     }, [id]);
 
     useEffect(() => { loadData(); }, [loadData]);
@@ -79,6 +90,15 @@ export default function ViewerProjectWorkspacePage() {
                         <span className="vpw-progress-track">
                             <span className="vpw-progress-fill" style={{ width: `${progress}%` }} />
                         </span>
+                    </div>
+                    <div className="vpw-stat-card">
+                        <span className="vpw-stat-label">Riesgos activos</span>
+                        <strong
+                            className="vpw-stat-value"
+                            style={{ color: activeRisks > 0 ? '#B94A48' : undefined }}
+                        >
+                            {loading ? '—' : activeRisks}
+                        </strong>
                     </div>
                     <div className="vpw-stat-card">
                         <span className="vpw-stat-label">Sprint activo</span>
@@ -143,6 +163,14 @@ export default function ViewerProjectWorkspacePage() {
                                 <button className="vpw-quick-action" onClick={() => navigate('/audit')}>
                                     Auditoría
                                 </button>
+                                {isPM && (
+                                    <button
+                                        className="vpw-quick-action"
+                                        onClick={() => navigate(`/projects/${id}/risks`, { state: { projectName } })}
+                                    >
+                                        Riesgos
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </aside>

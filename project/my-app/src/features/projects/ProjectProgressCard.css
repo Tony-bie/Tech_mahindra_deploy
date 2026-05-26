@@ -34,17 +34,15 @@
 .ppc-badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 12px;
-    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.03em;
     flex-shrink: 0;
 }
 
-.ppc-badge--ahead  { background: #DCFCE7; color: #15803D; }
-.ppc-badge--behind { background: #FFF1F2; color: #D92F47; }
-.ppc-badge--ontime { background: #F1F5F9; color: #475569; }
+.ppc-badge--ahead  { color: #15803D; }
+.ppc-badge--behind { color: #D92F47; }
+.ppc-badge--ontime { color: #475569; }
 
 /* ── Body layout ────────────────────────────────── */
 .ppc-body {
