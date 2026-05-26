@@ -143,9 +143,6 @@ export default function ViewerWorkItemDetailPage() {
         );
     }
 
-    const type = getTypeBadgeColors(workItem.type);
-    const status = getStatusBadgeColors(statusLabel(currentStatus));
-
     const typeLabelMap = {
         user_story: 'Historia',
         task: 'Tarea',

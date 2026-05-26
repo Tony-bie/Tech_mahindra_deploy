@@ -25,5 +25,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["argon2", "protobufjs"]
   }
 }
