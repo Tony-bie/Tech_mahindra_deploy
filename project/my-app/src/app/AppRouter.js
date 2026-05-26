@@ -127,6 +127,15 @@ export default function AppRouter() {
                             }
                         />
 
+                        <Route
+                            path="/projects/:id/audit"
+                            element={
+                                <ProtectedRoute roles={['pm', 'admin']}>
+                                    <AuditPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
                         {/* ── Nuevo proyecto ────────────────────────────── */}
                         <Route
                             path="/projects/new"

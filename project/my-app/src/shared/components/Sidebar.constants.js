@@ -33,7 +33,7 @@ export const NAV_ITEMS = [
     },
 
     // ── Inteligencia ───────────────────────────────────────────────────────
-    { to: '/audit',       label: 'Bitácora',      icon: 'audit',  section: 'inteligencia' },
+    { to: '/audit',       label: 'Bitácora general', icon: 'audit',  section: 'inteligencia', roles: ['admin'] },
     { to: '/leaderboard', label: 'Clasificación',  icon: 'leader', section: 'inteligencia' },
     { to: '/suggestions', label: 'Sugerencias de proyecto', icon: 'suggestions', section:'inteligencia'}
 ];
@@ -92,6 +92,12 @@ export const PROJECT_NAV_ITEMS = [
         suffix: 'risks',
         label:  'Riesgos',
         icon:   'risks',
+        roles:  ['pm', 'admin'],
+    },
+    {
+        suffix: 'audit',
+        label:  'Bitácora',
+        icon:   'audit',
         roles:  ['pm', 'admin'],
     },
 ];

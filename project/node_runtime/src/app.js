@@ -14,6 +14,7 @@ const blockersRoutes = require('./modules/blockers/blockers.routes')
 const suggestionsRoutes = require('./modules/suggestions/suggestions.routes')
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes')
 const risksRoutes     = require('./modules/risks/risks.routes')
+const auditRoutes     = require('./modules/audit/audit.routes')
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/blockers', blockersRoutes)
 app.use('/suggestions', suggestionsRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/risks',     risksRoutes)
+app.use('/audit',     auditRoutes)
 
 app.use(errorHandler);
 

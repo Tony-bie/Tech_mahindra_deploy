@@ -401,6 +401,14 @@ async function removeViewerFromProject(req, res) {
             return res.status(403).json({ message: 'CA-02: solo el PM asignado puede gestionar viewers de este proyecto' });
         }
 
+        // Cargar viewer.username para enriquecer la auditoría (HU-23 CA-01)
+        const { data: viewerUser } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id_user', viewerId)
+            .single();
+        const viewerUsername = viewerUser?.username ?? null;
+
         const { error: deleteErr } = await supabase
             .from('project_member')
             .delete()
@@ -416,7 +424,12 @@ async function removeViewerFromProject(req, res) {
                 action: 'REMOVE_VIEWER',
                 entity: 'project_member',
                 entity_id: String(projectId),
-                payload: { project_name: project.project_name, viewer_id: viewerId },
+                payload: {
+                    project_id:   projectId,
+                    project_name: project.project_name,
+                    before:       { viewer_id: viewerId, viewer_username: viewerUsername },
+                    after:        null,
+                },
             }]);
 
         return res.status(200).json({ message: 'Viewer desvinculado exitosamente' });
