@@ -162,6 +162,7 @@ export default function ViewerProjectsTable({ user }) {
     const [viewersModal, setViewersModal] = useState(null);
     const [progressMap,  setProgressMap]  = useState({}); // { [id_project]: data | null }
     const [risksMap,     setRisksMap]     = useState({}); // { [id_project]: count }
+    const [filters, setFilters] = useState('all');
 
     useEffect(() => {
         async function loadProjects() {
@@ -216,13 +217,46 @@ export default function ViewerProjectsTable({ user }) {
     }, []);
 
     const filtered = useMemo(() => {
+        let result = projects;
+        
         const q = query.trim().toLowerCase();
-        if (!q) return projects;
-        return projects.filter(p =>
+        if (q) result = result.filter(p =>
             String(p.project_name || '').toLowerCase().includes(q) ||
             String(p.client_name  || '').toLowerCase().includes(q)
         );
-    }, [projects, query]);
+
+        if (filters === 'solo_rojo') {
+            result = result.filter(p => progressMap[p.id_project]?.semaforo === 'rojo');
+        }
+
+        if (filters === 'desviacion_negativa') {
+            result = result.filter(p => (progressMap[p.id_project]?.desviacion ?? 0) < 0);
+        }
+
+        const order = { rojo: 0, amarillo: 1, verde: 2 };
+        if (filters === 'mayor_riesgo') {
+            result = result.sort((a, b) => {
+                const sa = order[progressMap[a.id_project]?.semaforo] ?? 3;
+                const sb = order[progressMap[b.id_project]?.semaforo] ?? 3;
+                if (sa !== sb) return sa - sb;
+                // desempate: más negativo primero
+                const da = progressMap[a.id_project]?.desviacion ?? 0;
+                const db = progressMap[b.id_project]?.desviacion ?? 0;
+                return da - db;
+            });
+        }
+        if (filters === 'menor_riesgo') {
+            result = result.sort((a, b) => {
+                const sa = order[progressMap[a.id_project]?.semaforo] ?? 3;
+                const sb = order[progressMap[b.id_project]?.semaforo] ?? 3;
+                return sb - sa;
+            });
+        }
+        if (filters === 'Riesgos_actvos'){
+            result = result.filter(p => (risksMap[p.id_project] ?? 0) > 0);
+        }
+        return result;
+    }, [projects, query, filters, progressMap]);
 
     if (loading) return <div className="vpt-empty">Cargando proyectos...</div>;
     if (error)   return <div className="vpt-error">{error}</div>;
@@ -243,7 +277,18 @@ export default function ViewerProjectsTable({ user }) {
                             placeholder="Buscar proyectos..."
                             className="vpt-search"
                         />
-                        <button className="vpt-btn-ghost">Filtrar</button>
+                            <select
+                                value={filters}
+                                onChange={e => setFilters(e.target.value)}
+                                className='vpt-search'
+                            >
+                                <option value={"all"}>Filtrar</option>
+                                <option value="mayor_riesgo">Mayor riesgo primero</option>
+                                <option value="menor_riesgo">Menor riesgo primero</option>
+                                <option value="solo_rojo">Solo Rojo</option>
+                                <option value="desviacion_negativa">Desviación negativa</option>
+                                <option value="Riesgos_actvos">Riesgos activos</option>
+                            </select>
                         <button className="vpt-btn-ghost">Exportar</button>
                     </div>
                 </div>
