@@ -42,10 +42,7 @@ function KpiCard({ label, value, sub, accent }) {
 function StatusBadge({ status }) {
     const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
     return (
-        <span style={{
-            padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-            backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-        }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: cfg.color }}>
             {cfg.label}
         </span>
     );

@@ -36,7 +36,7 @@ export default function UpcomingSection({ lists }) {
                                             <div style={s.title}>{d.project_name}</div>
                                             <div style={s.meta}>{fmtDate(d.deadline)}</div>
                                         </div>
-                                        <span style={{ ...s.pill, backgroundColor: c.bg, color: c.color }}>
+                                        <span style={{ color: c.color, fontWeight: 700, fontSize: 12 }}>
                                             {d.days_left === 0 ? 'Hoy' : `${d.days_left} días`}
                                         </span>
                                     </li>
@@ -61,7 +61,7 @@ export default function UpcomingSection({ lists }) {
                                             {it.assignee_username && <> · {it.assignee_username}</>}
                                         </div>
                                     </div>
-                                    <span style={{ ...s.pill, backgroundColor: '#FCE9E9', color: '#B94A48' }}>
+                                    <span style={{ color: '#B94A48', fontWeight: 700, fontSize: 12 }}>
                                         {it.days_overdue}d
                                     </span>
                                 </li>
@@ -79,5 +79,5 @@ const s = {
     row:   { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 4px', borderBottom: '1px solid #F0F0EE', cursor: 'pointer' },
     title: { fontSize: 13, fontWeight: 500, color: '#1A1A1A' },
     meta:  { fontSize: 11, color: '#888', marginTop: 2 },
-    pill:  { padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600 },
+    pill:  { fontSize: 12, fontWeight: 700 },
 };

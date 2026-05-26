@@ -11,7 +11,8 @@ export const ICONS = {
     backlog:    '▦',
     sprintboard:'◈',
     costs:      '◍',
-    suggestions: '⬡' ,
+    suggestions: '⬡',
+    risks:      '◬',
 };
 
 // ─── Navegación global (fuera de contexto de proyecto) ───────────────────────
@@ -86,5 +87,11 @@ export const PROJECT_NAV_ITEMS = [
         label:  'Costos',
         icon:   'costs',
         // viewer, pm, admin → todos pueden registrar o aprobar costos
+    },
+    {
+        suffix: 'risks',
+        label:  'Riesgos',
+        icon:   'risks',
+        roles:  ['pm', 'admin'],
     },
 ];

@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { fmtMoney, fmtPct, styles } from './dashboard.utils';
 
 function getSemaphore(semaforo) {
-    if (semaforo === 'rojo')     return { label: 'Rojo',     color: '#B71C1C', bg: '#FDECEC', dot: '#CC0000'  };
-    if (semaforo === 'amarillo') return { label: 'Amarillo', color: '#8A5A00', bg: '#FFF3D9', dot: '#E8A000'  };
-    if (semaforo === 'verde')    return { label: 'Verde',    color: '#2E7D32', bg: '#E7F6EA', dot: '#3C9A57'  };
+    if (semaforo === 'rojo')     return { label: 'Rojo',     color: '#B71C1C', dot: '#CC0000'  };
+    if (semaforo === 'amarillo') return { label: 'Amarillo', color: '#8A5A00', dot: '#E8A000'  };
+    if (semaforo === 'verde')    return { label: 'Verde',    color: '#2E7D32', dot: '#3C9A57'  };
     return null;
 }
 
@@ -81,9 +81,7 @@ export default function ProjectsTable({ projects }) {
                                             return (
                                                 <span style={{
                                                     display: 'inline-flex', alignItems: 'center', gap: 5,
-                                                    borderRadius: 999, padding: '2px 10px',
-                                                    fontSize: 10, fontWeight: 700,
-                                                    color: sm.color, backgroundColor: sm.bg,
+                                                    fontSize: 11, fontWeight: 700, color: sm.color,
                                                 }}>
                                                     <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: sm.dot, flexShrink: 0 }} />
                                                     {sm.label}
@@ -118,5 +116,5 @@ const s = {
     progressTrack: { width: 80, height: 6, backgroundColor: '#EEE', borderRadius: 3, overflow: 'hidden' },
     progressFill:  { height: '100%', backgroundColor: '#3C9A57' },
     progressLabel: { fontSize: 12, color: '#555' },
-    riskBadge:     { display: 'inline-block', minWidth: 20, padding: '2px 8px', backgroundColor: '#FCE9E9', color: '#B94A48', borderRadius: 999, fontSize: 12, fontWeight: 600, textAlign: 'center' },
+    riskBadge:     { color: '#B94A48', fontWeight: 700, fontSize: 12 },
 };

@@ -161,6 +161,7 @@ export default function ViewerProjectsTable({ user }) {
     const [error,        setError]        = useState('');
     const [viewersModal, setViewersModal] = useState(null);
     const [progressMap,  setProgressMap]  = useState({}); // { [id_project]: data | null }
+    const [risksMap,     setRisksMap]     = useState({}); // { [id_project]: count }
 
     useEffect(() => {
         async function loadProjects() {
@@ -176,18 +177,34 @@ export default function ViewerProjectsTable({ user }) {
                 const list = Array.isArray(data) ? data : [];
                 setProjects(list);
 
-                // Fetch progreso de todos los proyectos en paralelo
-                const entries = await Promise.all(
-                    list.map(async (p) => {
-                        try {
-                            const { res: pr, data: pd } = await api.get(`/projects/${p.id_project}/progress`);
-                            return [p.id_project, pr.ok ? pd : null];
-                        } catch {
-                            return [p.id_project, null];
-                        }
-                    })
-                );
-                setProgressMap(Object.fromEntries(entries));
+                // Fetch progreso y riesgos de todos los proyectos en paralelo
+                const [progressEntries, riskEntries] = await Promise.all([
+                    Promise.all(
+                        list.map(async (p) => {
+                            try {
+                                const { res: pr, data: pd } = await api.get(`/projects/${p.id_project}/progress`);
+                                return [p.id_project, pr.ok ? pd : null];
+                            } catch {
+                                return [p.id_project, null];
+                            }
+                        })
+                    ),
+                    Promise.all(
+                        list.map(async (p) => {
+                            try {
+                                const { res: rr, data: rd } = await api.get(`/risks?project_id=${p.id_project}`);
+                                const count = rr.ok
+                                    ? (rd.risks || []).filter(r => r.status === 'active').length
+                                    : 0;
+                                return [p.id_project, count];
+                            } catch {
+                                return [p.id_project, 0];
+                            }
+                        })
+                    ),
+                ]);
+                setProgressMap(Object.fromEntries(progressEntries));
+                setRisksMap(Object.fromEntries(riskEntries));
             } catch {
                 setProjects([]);
                 setError('Error de conexión con el servidor');
@@ -298,7 +315,24 @@ export default function ViewerProjectsTable({ user }) {
                                                     : <span style={{ color: '#AAA' }}>—</span>
                                                 }
                                             </td>
-                                            <td className="vpt-td" style={{ color: '#AAA' }}>—</td>
+                                            <td className="vpt-td">
+                                                {(() => {
+                                                    const count = risksMap[project.id_project] ?? null;
+                                                    if (count === null) return <span style={{ color: '#AAA' }}>—</span>;
+                                                    const label = count > 0
+                                                        ? <span style={{ color: '#C62828', fontWeight: 600 }}>{count}</span>
+                                                        : <span style={{ color: '#AAA' }}>0</span>;
+                                                    if (!isPM) return label;
+                                                    return (
+                                                        <button
+                                                            onClick={() => navigate(`/projects/${project.id_project}/risks`, { state: { projectName: project.project_name } })}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                                                        >
+                                                            {label}
+                                                        </button>
+                                                    );
+                                                })()}
+                                            </td>
                                             <td className="vpt-td">
                                                 <span
                                                     className="vpt-semaphore-pill"

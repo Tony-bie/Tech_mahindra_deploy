@@ -43,6 +43,13 @@ export default function KpiStrip({ summary }) {
                     accent={summary.overdue_items_count > 0 ? '#B94A48' : undefined}
                 />
             </div>
+            <div style={styles.grid4}>
+                <KpiCard
+                    label="Riesgos activos"
+                    value={summary.total_riesgos_activos ?? 0}
+                    accent={summary.total_riesgos_activos > 0 ? '#B94A48' : undefined}
+                />
+            </div>
         </>
     );
 }

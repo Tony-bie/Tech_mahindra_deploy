@@ -1,4 +1,5 @@
-const supabase = require('../../config/supabase');
+const supabase             = require('../../config/supabase');
+const { computeRiskScore } = require('../semaphore/riskScore');
 
 // ─── GET /dashboard/admin ────────────────────────────────────────────────────
 // Dashboard consolidado para el rol admin. Calcula KPIs, agrega series para
@@ -9,16 +10,16 @@ async function getAdminDashboard(req, res) {
     try {
         // ── Queries en lote ──────────────────────────────────────────────────
 
-        // 1. Proyectos (incluye deadline para semáforo HU-16)
+        // 1. Proyectos
         const { data: projects, error: projErr } = await supabase
             .from('project')
-            .select('id_project, project_name, client_name, estimated_sp, deadline');
+            .select('id_project, project_name, client_name, estimated_sp, deadline, start_date');
         if (projErr) return res.status(500).json({ error: projErr.message });
 
         // 2. Sprints
         const { data: sprints, error: sprintErr } = await supabase
             .from('sprint')
-            .select('id_sprint, id_project, status');
+            .select('id_sprint, id_project, status, SP_estimated, deadline');
         if (sprintErr) return res.status(500).json({ error: sprintErr.message });
 
         const sprintToProject = Object.fromEntries(
@@ -28,17 +29,20 @@ async function getAdminDashboard(req, res) {
         // 3. Work items
         const { data: workItems, error: wiErr } = await supabase
             .from('work_item')
-            .select('id_work_item, id_sprint, title, type, status, story_points, assignee_id, end_date');
+            .select('id_work_item, id_sprint, title, type, status, story_points, assignee_id, end_date, updated_at');
         if (wiErr) return res.status(500).json({ error: wiErr.message });
 
         // 4. Budgets
         const { data: budgets, error: budgetErr } = await supabase
             .from('budget')
-            .select('id_budget, id_project');
+            .select('id_budget, id_project, total_cost');
         if (budgetErr) return res.status(500).json({ error: budgetErr.message });
 
         const budgetToProject = Object.fromEntries(
             (budgets || []).map(b => [b.id_budget, b.id_project])
+        );
+        const budgetToTotal = Object.fromEntries(
+            (budgets || []).map(b => [b.id_project, Number(b.total_cost || 0)])
         );
 
         // 5. Spends (todos: para distribucion por status/categoria)
@@ -50,14 +54,14 @@ async function getAdminDashboard(req, res) {
         // 6. Risks activos
         const { data: risks, error: riskErr } = await supabase
             .from('risk')
-            .select('id_project')
+            .select('id_project, level')
             .eq('status', 'active');
         if (riskErr) return res.status(500).json({ error: riskErr.message });
 
-        // 6b. Blockers para semáforo HU-16
+        // 6b. Blockers para Risk Score (RF-25 requiere created_at)
         const { data: blockersAll } = await supabase
             .from('blocker_implication')
-            .select('id_project, severity, approval_status')
+            .select('id_project, severity, approval_status, created_at')
             .eq('kind', 'blocker')
             .in('approval_status', ['pending', 'approved']);
 
@@ -81,15 +85,36 @@ async function getAdminDashboard(req, res) {
         if (auditErr) return res.status(500).json({ error: auditErr.message });
 
         // ── Agregaciones por proyecto (tabla principal) ──────────────────────
-        const doneSpByProject = {};
-        const totalSpByProject = {};
+        const now = new Date();
+        const doneSpByProject   = {};
+        const totalSpByProject  = {};
+        const recentSPByProject = {};
+        const sevenDaysAgo = new Date(now - 7 * 86400000);
+
         for (const wi of (workItems || [])) {
             const pid = sprintToProject[wi.id_sprint];
             if (pid == null) continue;
             totalSpByProject[pid] = (totalSpByProject[pid] || 0) + (wi.story_points || 0);
             if (wi.status === 'done') {
                 doneSpByProject[pid] = (doneSpByProject[pid] || 0) + (wi.story_points || 0);
+                if (wi.updated_at && new Date(wi.updated_at) >= sevenDaysAgo) {
+                    recentSPByProject[pid] = (recentSPByProject[pid] || 0) + (wi.story_points || 0);
+                }
             }
+        }
+
+        // Sprints por proyecto (para avance esperado y velocidad)
+        const sprintsByProject = {};
+        for (const s of (sprints || [])) {
+            if (!sprintsByProject[s.id_project]) sprintsByProject[s.id_project] = [];
+            sprintsByProject[s.id_project].push(s);
+        }
+
+        // Bloqueadores por proyecto
+        const blockersByProject = {};
+        for (const b of (blockersAll || [])) {
+            if (!blockersByProject[b.id_project]) blockersByProject[b.id_project] = [];
+            blockersByProject[b.id_project].push(b);
         }
 
         const costoByProject = {};
@@ -101,33 +126,54 @@ async function getAdminDashboard(req, res) {
         }
 
         const riesgosByProject = {};
+        const activeRisksByProject = {};
         for (const r of (risks || [])) {
             riesgosByProject[r.id_project] = (riesgosByProject[r.id_project] || 0) + 1;
+            if (!activeRisksByProject[r.id_project]) activeRisksByProject[r.id_project] = [];
+            activeRisksByProject[r.id_project].push(r);
         }
 
-        const now = new Date();
+        const nowISO = now.toISOString();
         const projectRows = (projects || []).map(p => {
-            const doneSp      = doneSpByProject[p.id_project] || 0;
-            const estimated   = p.estimated_sp;
-            const avance_real = (estimated && estimated > 0) ? doneSp / estimated : null;
+            const pid        = p.id_project;
+            const sp_totales = p.estimated_sp || totalSpByProject[pid] || 0;
+            const sp_done    = doneSpByProject[pid] || 0;
+            const avance_real_pct = sp_totales > 0 ? (sp_done / sp_totales) * 100 : 0;
+            const avance_real     = sp_totales > 0 ? sp_done / sp_totales : null;
 
-            // Semáforo HU-16 (reglas de override + deadline)
-            const projBlockers   = (blockersAll || []).filter(b => b.id_project === p.id_project);
-            const hasCritical    = projBlockers.some(b => b.severity === 'critical');
-            const hasMedium      = projBlockers.some(b => b.severity === 'medium' && b.approval_status === 'pending');
-            const deadlinePassed = p.deadline && new Date(p.deadline) < now && (avance_real === null || avance_real < 1);
-            let semaforo = 'verde';
-            if (hasCritical || deadlinePassed) semaforo = 'rojo';
-            else if (hasMedium)               semaforo = 'amarillo';
+            // Avance esperado
+            const pastSprints    = (sprintsByProject[pid] || []).filter(s => s.deadline && s.deadline <= nowISO);
+            const sp_esperados   = pastSprints.reduce((a, s) => a + (s.SP_estimated || 0), 0);
+            const avance_esperado = sp_totales > 0 ? (sp_esperados / sp_totales) * 100 : 0;
+            const desviacion      = avance_real_pct - avance_esperado;
+
+            // Velocidad semanal esperada
+            let expectedWeeklySP = 0;
+            if (p.start_date && p.deadline && sp_totales > 0) {
+                const weeks = Math.max(1, (new Date(p.deadline) - new Date(p.start_date)) / (7 * 86400000));
+                expectedWeeklySP = sp_totales / weeks;
+            }
+
+            const { semaforo } = computeRiskScore({
+                desviacion,
+                deadline:        p.deadline,
+                avance_real:     avance_real_pct,
+                costo_aprobado:  costoByProject[pid]        || 0,
+                presupuesto:     budgetToTotal[pid]         || 0,
+                blockers:        blockersByProject[pid]     || [],
+                activeRisks:     activeRisksByProject[pid]  || [],
+                recentSP:        recentSPByProject[pid]     || 0,
+                expectedWeeklySP,
+            });
 
             return {
-                id_project: p.id_project,
-                project_name: p.project_name,
-                client_name: p.client_name,
+                id_project:      pid,
+                project_name:    p.project_name,
+                client_name:     p.client_name,
                 avance_real,
-                costo_aprobado: costoByProject[p.id_project] || 0,
-                riesgos_activos: riesgosByProject[p.id_project] || 0,
-                desviacion: null,
+                costo_aprobado:  costoByProject[pid] || 0,
+                riesgos_activos: riesgosByProject[pid] || 0,
+                desviacion,
                 semaforo,
             };
         });

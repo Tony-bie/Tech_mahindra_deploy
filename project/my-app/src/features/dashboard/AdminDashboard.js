@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../config/api';
+import ws from '../../config/ws';
 import { styles } from './dashboard.utils';
 import KpiStrip from './KpiStrip';
 import WorkItemsSection from './WorkItemsSection';
@@ -14,6 +15,15 @@ export default function AdminDashboard() {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        function handleWsMessage(e) {
+            try {
+                const msg = JSON.parse(e.data);
+                if (msg.type === 'risk_update') load();
+            } catch { /* ignorar mensajes malformados */ }
+        }
+
+        ws.addEventListener('message', handleWsMessage);
+
         async function load() {
             setLoading(true);
             setError('');
@@ -31,6 +41,7 @@ export default function AdminDashboard() {
             }
         }
         load();
+        return () => ws.removeEventListener('message', handleWsMessage);
     }, []);
 
     if (loading) {

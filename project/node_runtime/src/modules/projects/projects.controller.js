@@ -1,4 +1,5 @@
-const supabase = require('../../config/supabase');
+const supabase               = require('../../config/supabase');
+const { computeRiskScore }   = require('../semaphore/riskScore');
 
 // =====================================================
 // GET /projects
@@ -492,7 +493,7 @@ async function getProjectProgress(req, res) {
 
         const { data: project, error: projErr } = await supabase
             .from('project')
-            .select('id_project, id_pm, estimated_sp, deadline')
+            .select('id_project, id_pm, estimated_sp, deadline, start_date')
             .eq('id_project', projectId)
             .single();
 
@@ -572,36 +573,71 @@ async function getProjectProgress(req, res) {
             costo_aprobado = (approvedSpends || []).reduce((acc, s) => acc + (s.spendmoney || 0), 0);
         }
 
-        // ── Semáforo HU-16 ───────────────────────────────────────────────────────
-        // Override 1 — blocker crítico pendiente o aprobado → rojo
-        // Override 2 — blocker medio pendiente             → amarillo
-        // Regla desviación: <= -20 → rojo; <= -5 → amarillo; else → verde
-        // Regla deadline: plazo vencido con avance < 100%  → rojo
-        const { data: critBlockers } = await supabase
-            .from('blocker_implication')
-            .select('id_blocker')
-            .eq('id_project', projectId)
-            .eq('kind', 'blocker')
-            .eq('severity', 'critical')
-            .in('approval_status', ['pending', 'approved'])
-            .limit(1);
+        // ── Risk Score RF-21/22/23/24/25 ────────────────────────────────────────
+        const [{ data: blockers }, { data: activeRisks }] = await Promise.all([
+            supabase
+                .from('blocker_implication')
+                .select('severity, approval_status, created_at')
+                .eq('id_project', projectId)
+                .eq('kind', 'blocker')
+                .in('approval_status', ['pending', 'approved']),
+            supabase
+                .from('risk')
+                .select('level')
+                .eq('id_project', projectId)
+                .eq('status', 'active'),
+        ]);
 
-        const { data: medBlockers } = await supabase
-            .from('blocker_implication')
-            .select('id_blocker')
-            .eq('id_project', projectId)
-            .eq('kind', 'blocker')
-            .eq('severity', 'medium')
-            .eq('approval_status', 'pending')
-            .limit(1);
+        // Presupuesto estimado
+        let presupuesto = 0;
+        if (budget && budget.length > 0) {
+            const { data: bud } = await supabase
+                .from('budget')
+                .select('total_cost')
+                .eq('id_project', projectId)
+                .limit(1)
+                .maybeSingle();
+            presupuesto = Number(bud?.total_cost || 0);
+        }
 
-        const hasCritical    = Array.isArray(critBlockers) && critBlockers.length > 0;
-        const hasMedium      = Array.isArray(medBlockers)  && medBlockers.length  > 0;
-        const deadlinePassed = project.deadline && new Date(project.deadline) < new Date() && avance_real < 100;
+        // Velocidad semanal esperada
+        let expectedWeeklySP = 0;
+        if (project.start_date && project.deadline && sp_totales > 0) {
+            const weeks = Math.max(1, (new Date(project.deadline) - new Date(project.start_date)) / (7 * 86400000));
+            expectedWeeklySP = sp_totales / weeks;
+        }
 
-        let semaforo = 'verde';
-        if (hasCritical || desviacion <= -20 || deadlinePassed) semaforo = 'rojo';
-        else if (hasMedium || desviacion <= -5)                 semaforo = 'amarillo';
+        // SP cerrados en últimos 7 días
+        let recentSP = 0;
+        if (sprintIds.length > 0) {
+            const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+            const { data: recentItems } = await supabase
+                .from('work_item')
+                .select('story_points')
+                .in('id_sprint', sprintIds)
+                .eq('status', 'done')
+                .gte('updated_at', sevenDaysAgo);
+            recentSP = (recentItems || []).reduce((a, wi) => a + (wi.story_points || 0), 0);
+        }
+
+        const { score: risk_score, semaforo } = computeRiskScore({
+            desviacion,
+            deadline:        project.deadline,
+            avance_real,
+            costo_aprobado,
+            presupuesto,
+            blockers:        blockers  || [],
+            activeRisks:     activeRisks || [],
+            recentSP,
+            expectedWeeklySP,
+        });
+
+        // Persistir en tabla semaphore para suggestions y cron
+        const toEn = { verde: 'green', amarillo: 'yellow', rojo: 'red' };
+        supabase.from('semaphore').upsert(
+            { id_project: projectId, status: toEn[semaforo], risk_score, semaphore_update_at: new Date().toISOString() },
+            { onConflict: 'id_project' }
+        ).then(({ error }) => { if (error) console.error('[semaphore upsert]', error.message); });
 
         return res.status(200).json({
             avance_real,
@@ -611,6 +647,7 @@ async function getProjectProgress(req, res) {
             sp_esperados,
             sp_totales,
             costo_aprobado,
+            risk_score,
             semaforo,
         });
     } catch (error) {
