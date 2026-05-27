@@ -20,9 +20,11 @@ export default function ProjectsPage() {
                         <button style={s.btnPrimary} onClick={() => navigate('/projects/new')}>
                             + Nuevo proyecto
                         </button>
-                        <button style={s.btnSecondary} onClick={() => navigate('/users')}>
-                            Gestión de usuarios
-                        </button>
+                        {user?.role === 'admin' && (
+                            <button style={s.btnSecondary} onClick={() => navigate('/users')}>
+                                Gestión de usuarios
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
