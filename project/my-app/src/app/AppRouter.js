@@ -166,8 +166,17 @@ export default function AppRouter() {
                             }
                         />
 
-                        <Route path="/audit"       element={<AuditPage />} />
-                        <Route path="/leaderboard" element={<LeaderboardPage />} />
+                        <Route path="/audit" element={<AuditPage />} />
+
+                        {/* ── Leaderboard por proyecto ───────────────────── */}
+                        <Route
+                            path="/projects/:id/leaderboard"
+                            element={
+                                <ProtectedRoute roles={['viewer', 'pm', 'admin']}>
+                                    <LeaderboardPage />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route path='/suggestions' 
                             element={
                             <ProtectedRoute roles={['pm', 'admin']}>

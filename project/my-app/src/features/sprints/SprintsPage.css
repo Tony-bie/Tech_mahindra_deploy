@@ -5,10 +5,66 @@
   min-height: 100vh;
 }
 
-.sprint-toolbar {
+/* ── Header ── */
+.sprint-page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sprint-header {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin: 0;
+}
+
+.sprint-count {
+  font-size: 13px;
+  color: #888;
+}
+
+/* ── Top bar ── */
+.topBar {
+  background-color: #FFF;
+  border-bottom: 1px solid #E5E5E3;
+  padding: 0 32px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.breadCrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.crumbBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: #888;
+  padding: 0;
+}
+
+.crumbBtn:hover { color: #1A1A1A; }
+
+.sep { color: #CCC; }
+
+.crumbCurrent {
+  color: #1A1A1A;
+  font-weight: 500;
+}
+
+/* ── Toolbar ── */
+.sprint-toolbar {
+  display: flex;
+  align-items: center;
   margin-bottom: 16px;
 }
 
@@ -32,54 +88,22 @@
   cursor: pointer;
 }
 
-.topBar{
-  background-color: #FFF;
-  border-bottom: 1px solid #E5E5E3; 
-  padding: 0 32px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.breadCrumb{
- display: flex;
- align-items: center;
- gap: 6px;
- padding: 0px;
- font-size: 13px; 
-}
-
-.crumbBtn{
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 13;
-  color: #888;
-  padding: 0px 
-}
-
-.sep{
-  color: #CCC;
-}
-.crumbCurrent{
-  color: #1A1A1A;
-  font-weight: 500;
-}
-
+/* ── Botones ── */
 .btn-new-sprint {
   padding: 7px 16px;
-  background: #e53935;
+  background: #E31837;
   color: #fff;
   border: none;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.12s;
 }
 
-.btn-new-sprint:hover { background: #c62828; }
+.btn-new-sprint:hover { background: #C62828; }
 
+/* ── Tabla ── */
 .sprint-table-card {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -91,34 +115,77 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  table-layout: auto;
 }
 
 .sprint-table-card th {
   background: #f9fafb;
-  padding: 10px 14px;
+  padding: 10px 16px;
   text-align: left;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
   color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
 }
 
 .sprint-table-card td {
-  padding: 12px 14px;
+  padding: 13px 16px;
   border-bottom: 1px solid #f3f4f6;
+  color: #1A1A1A;
+  text-align: left;
+  vertical-align: middle;
 }
 
-.badge {
-  padding: 3px 10px;
-  border-radius: 100px;
-  font-size: 12px;
+.sprint-row {
+  transition: background 0.1s;
+}
+
+.sprint-row:hover td {
+  background: #FAFAF9;
+}
+
+.sprint-row:last-child td {
+  border-bottom: none;
+}
+
+.sprint-name {
   font-weight: 600;
 }
 
-.badge-completed  { background: #dcfce7; color: #166534; }
-.badge-active     { background: #fef9c3; color: #854d0e; }
-.badge-planned    { background: #f3f4f6; color: #374151; }
-.badge-cancelled  { background: #fee2e2; color: #991b1b; }
+.sprint-sp {
+  font-variant-numeric: tabular-nums;
+  color: #555;
+}
 
+/* ── Estado vacío / carga ── */
+.sprint-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+/* ── Badges ── */
+.badge {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge-done      { color: #166534; }
+.badge-active    { color: #854d0e; }
+.badge-planned   { color: #374151; }
+.badge-cancelled { color: #991b1b; }
+
+/* ── Días restantes ── */
+.days-ok      { font-size: 13px; color: #6B7280; }
+.days-warning { font-size: 13px; color: #D97706; font-weight: 600; }
+.days-overdue { font-size: 13px; color: #DC2626; font-weight: 600; }
+.days-neutral { font-size: 13px; color: #CCC; }
+
+/* ── Botón ver tablero ── */
 .btn-view {
   padding: 5px 14px;
   background: #fff;
@@ -128,11 +195,15 @@
   font-weight: 500;
   cursor: pointer;
   color: #374151;
-  transition: background 0.12s;
+  transition: background 0.12s, border-color 0.12s;
 }
 
-.btn-view:hover { background: #f3f4f6; }
+.btn-view:hover {
+  background: #f3f4f6;
+  border-color: #9CA3AF;
+}
 
+/* ── Panel lateral (CreateSprint) ── */
 .overlay {
   position: fixed;
   inset: 0;
@@ -190,7 +261,7 @@
 .side-panel__submit {
   margin-top: auto;
   padding: 10px;
-  background: #e53935;
+  background: #E31837;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -199,4 +270,4 @@
   cursor: pointer;
 }
 
-.side-panel__submit:hover { background: #c62828; }
+.side-panel__submit:hover { background: #C62828; }
