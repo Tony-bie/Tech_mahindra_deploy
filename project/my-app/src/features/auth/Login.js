@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react';
-import TechMahindraLogo from '../../shared/components/TechMahindraLogo';
 import './Login.css';
 
 function Login({ onLogin }) {
@@ -30,9 +29,6 @@ function Login({ onLogin }) {
     return (
         <div className='login-layout'>
             <main className='login-form'>
-                <div className='login-logo-wrap'>
-                    <TechMahindraLogo width={180} />
-                </div>
                 <h1>Iniciar sesión</h1>
                 <div>
                     <label className='login-credential' htmlFor="EmailUsername">CORREO O USUARIO</label>

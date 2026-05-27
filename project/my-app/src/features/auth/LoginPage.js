@@ -1,5 +1,6 @@
 import { useAuthContext } from '../../shared/context/AuthContext';
 import Login from './Login';
+import TechMahindraLogo from '../../shared/components/TechMahindraLogo';
 
 export default function LoginPage() {
     const { login } = useAuthContext();
@@ -7,11 +8,7 @@ export default function LoginPage() {
         <div className="app-layout-auth">
             <aside className="app-aside">
                 <div className="app-brand">
-                    <div className="app-box"></div>
-                    <div className="app-businessname">
-                        <h6 style={{ color: 'white' }}>Tech</h6>
-                        <h5 style={{ color: '#E31837' }}>mahindra</h5>
-                    </div>
+                    <TechMahindraLogo width={150} dark={true} />
                 </div>
                 <div className="app-middle">
                     <div className="app-title">

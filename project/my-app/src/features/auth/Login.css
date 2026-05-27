@@ -17,11 +17,6 @@
   max-width: 300px;
 }
 
-.login-logo-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 4px;
-}
 .login-form div {
   display: flex;
   flex-direction: column;
