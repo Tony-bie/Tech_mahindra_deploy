@@ -119,7 +119,12 @@ export default function ViewerProjectWorkspacePage() {
                                 <div className="vpw-card-title">Ítems del proyecto</div>
                                 <button
                                     className="vpw-snapshot-btn"
-                                    onClick={() => navigate(`/projects/${id}/backlog`, { state: { projectName } })}
+                                    onClick={() => navigate(
+                                        isPM
+                                            ? `/projects/${id}/work-items`
+                                            : `/projects/${id}/backlog`,
+                                        { state: { projectName } }
+                                    )}
                                 >
                                     Ver todos
                                 </button>
@@ -140,12 +145,14 @@ export default function ViewerProjectWorkspacePage() {
                                                     {item.story_points ? ` · ${item.story_points} SP` : ''}
                                                 </div>
                                             </div>
-                                            <button
-                                                className="vpw-snapshot-btn"
-                                                onClick={() => navigate(`/projects/${id}/backlog/${item.id_work_item}`, { state: { projectName } })}
-                                            >
-                                                Ver
-                                            </button>
+                                            {!isPM && (
+                                                <button
+                                                    className="vpw-snapshot-btn"
+                                                    onClick={() => navigate(`/projects/${id}/backlog/${item.id_work_item}`, { state: { projectName } })}
+                                                >
+                                                    Ver
+                                                </button>
+                                            )}
                                         </div>
                                     ))
                                 )}
@@ -157,12 +164,14 @@ export default function ViewerProjectWorkspacePage() {
                         <div className="vpw-side-card">
                             <div className="vpw-section-label">Navegación</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                                <button className="vpw-quick-action" onClick={() => navigate('/leaderboard')}>
+                                <button className="vpw-quick-action" onClick={() => navigate(`/projects/${id}/leaderboard`, { state: { projectName } })}>
                                     Leaderboard
                                 </button>
-                                <button className="vpw-quick-action" onClick={() => navigate('/audit')}>
+                                {isPM && (
+                                <button className="vpw-quick-action" onClick={() => navigate(`/projects/${id}/audit`, { state: { projectName } })}>
                                     Auditoría
                                 </button>
+                                )}
                                 {isPM && (
                                     <button
                                         className="vpw-quick-action"
