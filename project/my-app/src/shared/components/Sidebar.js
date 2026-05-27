@@ -105,11 +105,6 @@ export default function Sidebar({ onLogout }) {
                             menuClass={projectMenuClass}
                         />
                     )}
-
-                    <div className="sb-section">
-                        <div className="sb-section-label">Recognition</div>
-                        {renderNavItems(sectionRecognition)}
-                    </div>
                 </>
             ) : (
                 /* ── PM / ADMIN ───────────────────────────────────────────── */

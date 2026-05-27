@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import api from '../../config/api';
 import { useAuthContext } from '../../shared/context/AuthContext';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-function medal(rank) {
+function medal(rank, points) {
+    if (points === 0) return null;
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
     if (rank === 3) return '🥉';
@@ -23,13 +25,16 @@ function initials(username) {
 
 // ─── sub-components ─────────────────────────────────────────────────────────
 
-function MyRankCard({ me }) {
+function MyRankCard({ me, role }) {
     if (!me) {
+        const isManager = role === 'pm' || role === 'admin';
         return (
             <div style={s.rankCard}>
                 <div style={s.rankCardTitle}>Posición de esta semana</div>
                 <div style={{ color: '#888', fontSize: 13, marginTop: 12 }}>
-                    No has cerrado ítems esta semana aún.
+                    {isManager
+                        ? 'Eres el gestor de este proyecto.'
+                        : 'No has cerrado ítems esta semana aún.'}
                 </div>
             </div>
         );
@@ -40,7 +45,9 @@ function MyRankCard({ me }) {
             <div style={s.rankCardTitle}>Posición de esta semana</div>
             <div style={s.bigRank}>#{me.rank}</div>
             <div style={s.bigPts}>{me.weekly_points} pts</div>
-            <div style={s.rankSub}>{me.items_closed} ítems · {me.on_time_rate}% a tiempo</div>
+            <div style={s.rankSub}>
+                {me.items_closed} ítems · {me.items_closed > 0 ? `${me.on_time_rate}% a tiempo` : 'sin cierres aún'}
+            </div>
         </div>
     );
 }
@@ -83,14 +90,18 @@ function ScoringRulesCard() {
 
 export default function LeaderboardPage() {
     const { user } = useAuthContext();
-    const [data, setData]     = useState(null);
+    const { id: projectId } = useParams();
+    const location = useLocation();
+    const projectName = location.state?.projectName || `Proyecto ${projectId}`;
+
+    const [data, setData]       = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError]   = useState(null);
+    const [error, setError]     = useState(null);
 
     useEffect(() => {
         async function load() {
             setLoading(true);
-            const { res, data: body } = await api.get('/dashboard/leaderboard');
+            const { res, data: body } = await api.get(`/dashboard/leaderboard?project_id=${projectId}`);
             if (res.ok) {
                 setData(body);
             } else {
@@ -99,14 +110,14 @@ export default function LeaderboardPage() {
             setLoading(false);
         }
         load();
-    }, []);
+    }, [projectId]);
 
     return (
         <div style={s.page}>
             {/* ── Top bar ── */}
             <div style={s.topBar}>
                 <div style={s.breadcrumb}>
-                    <span style={{ color: '#888' }}>Inicio</span>
+                    <span style={{ color: '#888' }}>{projectName}</span>
                     <span style={{ color: '#CCC' }}>/</span>
                     <span style={{ color: '#1A1A1A', fontWeight: 500 }}>Clasificación</span>
                 </div>
@@ -129,7 +140,7 @@ export default function LeaderboardPage() {
                         <div style={s.tableWrap}>
                             {data.ranking.length === 0 ? (
                                 <div style={s.empty}>
-                                    No hay miembros en tus proyectos aún.
+                                    No hay viewers asignados a este proyecto aún.
                                 </div>
                             ) : (
                                 <table style={s.table}>
@@ -144,15 +155,17 @@ export default function LeaderboardPage() {
                                     </thead>
                                     <tbody>
                                         {data.ranking.map(row => {
-                                            const isMe = row.id_user === user?.id;
+                                            const isMe    = row.id_user === user?.id;
+                                            const hasPoints = row.weekly_points > 0;
+                                            const m = medal(row.rank, row.weekly_points);
                                             return (
                                                 <tr
                                                     key={row.id_user}
                                                     style={isMe ? s.trMe : s.tr}
                                                 >
                                                     <td style={s.tdRank}>
-                                                        {medal(row.rank)
-                                                            ? <span>{medal(row.rank)}</span>
+                                                        {m
+                                                            ? <span>{m}</span>
                                                             : <span style={s.rankNum}>{row.rank}</span>
                                                         }
                                                     </td>
@@ -175,21 +188,28 @@ export default function LeaderboardPage() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ ...s.td, ...s.tdNum, color: '#CC0000', fontWeight: 700 }}>
+                                                    <td style={{ ...s.td, ...s.tdNum,
+                                                        color: hasPoints ? '#CC0000' : '#AAA',
+                                                        fontWeight: 700,
+                                                    }}>
                                                         {row.weekly_points}
                                                     </td>
                                                     <td style={{ ...s.td, ...s.tdNum }}>
                                                         {row.items_closed}
                                                     </td>
                                                     <td style={{ ...s.td, ...s.tdNum }}>
-                                                        <span style={{
-                                                            color: row.on_time_rate >= 80 ? '#3C9A57'
-                                                                 : row.on_time_rate >= 50 ? '#E08F00'
-                                                                 : '#B94A48',
-                                                            fontWeight: 600,
-                                                        }}>
-                                                            {row.on_time_rate}%
-                                                        </span>
+                                                        {row.items_closed === 0 ? (
+                                                            <span style={{ color: '#AAA', fontWeight: 500 }}>—</span>
+                                                        ) : (
+                                                            <span style={{
+                                                                color: row.on_time_rate >= 80 ? '#3C9A57'
+                                                                     : row.on_time_rate >= 50 ? '#E08F00'
+                                                                     : '#B94A48',
+                                                                fontWeight: 600,
+                                                            }}>
+                                                                {row.on_time_rate}%
+                                                            </span>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             );
@@ -201,7 +221,7 @@ export default function LeaderboardPage() {
 
                         {/* ── Panel derecho ── */}
                         <div style={s.sidebar}>
-                            <MyRankCard me={data.my_position} />
+                            <MyRankCard me={data.my_position} role={user?.role} />
                             <PointsCard me={data.my_position} />
                             <ScoringRulesCard />
                         </div>
@@ -234,7 +254,7 @@ const s = {
     td:         { padding: '14px 16px', fontSize: 14, color: '#1A1A1A', verticalAlign: 'middle' },
     tdRank:     { padding: '14px 16px', textAlign: 'center', fontSize: 16, verticalAlign: 'middle' },
     tdNum:      { textAlign: 'center' },
-    rankNum:    { fontSize: 14, fontWeight: 600, color: '#888' },
+    rankNum:    { fontSize: 14, fontWeight: 600, color: '#AAA' },
 
     memberCell: { display: 'flex', alignItems: 'center', gap: 10 },
     avatar:     { width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#FFF', flexShrink: 0 },

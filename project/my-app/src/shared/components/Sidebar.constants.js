@@ -33,16 +33,14 @@ export const NAV_ITEMS = [
     },
 
     // ── Inteligencia ───────────────────────────────────────────────────────
-    { to: '/audit',       label: 'Bitácora general', icon: 'audit',  section: 'inteligencia', roles: ['admin'] },
-    { to: '/leaderboard', label: 'Clasificación',  icon: 'leader', section: 'inteligencia' },
-    { to: '/suggestions', label: 'Sugerencias de proyecto', icon: 'suggestions', section:'inteligencia'}
+    { to: '/audit',       label: 'Bitácora general',          icon: 'audit',       section: 'inteligencia', roles: ['admin'] },
+    { to: '/suggestions', label: 'Sugerencias de proyecto',   icon: 'suggestions', section: 'inteligencia' }
 ];
 
 // Items especiales del viewer (mismos destinos, distintas etiquetas)
 export const VIEWER_GLOBAL_ITEMS = [
-    { to: '/home',        label: 'Personal Dashboard', icon: 'personal', section: 'my_work' },
-    { to: '/projects',    label: 'Projects',           icon: 'projects', section: 'my_work' },
-    { to: '/leaderboard', label: 'Leaderboard',        icon: 'leader',   section: 'recognition' },
+    { to: '/home',     label: 'Personal Dashboard', icon: 'personal', section: 'my_work' },
+    { to: '/projects', label: 'Projects',           icon: 'projects', section: 'my_work' },
 ];
 
 // ─── Menú de proyecto (sidebar contextual) ───────────────────────────────────
@@ -99,5 +97,11 @@ export const PROJECT_NAV_ITEMS = [
         label:  'Bitácora',
         icon:   'audit',
         roles:  ['pm', 'admin'],
+    },
+    {
+        suffix: 'leaderboard',
+        label:  'Clasificación',
+        icon:   'leader',
+        // visible para todos los roles dentro del proyecto
     },
 ];

@@ -1,18 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { ICONS, PROJECT_NAV_ITEMS } from './Sidebar.constants';
 
-/**
- * Sección contextual del sidebar cuando el usuario está dentro de un proyecto.
- * Filtra los items según el rol del usuario para garantizar que cada rol
- * solo vea las rutas a las que realmente tiene acceso (espeja AppRouter).
- *
- * Props:
- *   projectId      – id del proyecto (string desde useParams)
- *   projectLabel   – nombre del proyecto para el encabezado
- *   projectState   – objeto a pasar como `state` en cada NavLink
- *   role           – rol del usuario autenticado ('viewer' | 'pm' | 'admin')
- *   menuClass      – función de clase para NavLink ({ isActive }) => string
- */
 export default function SidebarProjectSection({
     projectId,
     projectLabel,
@@ -20,7 +8,13 @@ export default function SidebarProjectSection({
     role,
     menuClass,
 }) {
-    // Filtra items: sin `roles` → visible para todos; con `roles` → solo si aplica
+    const location = useLocation();
+
+    // Detectar si estamos en un sprint board: /projects/:id/sprint-board/:id_sprint
+    const sprintBoardMatch = /\/sprint-board\/([^/]+)/.exec(location.pathname);
+    const isOnSprintBoard  = !!sprintBoardMatch;
+    const sprintBoardId    = sprintBoardMatch?.[1];
+
     const items = PROJECT_NAV_ITEMS.filter(
         item => !item.roles || item.roles.includes(role)
     );
@@ -29,17 +23,42 @@ export default function SidebarProjectSection({
         <div className="sb-section">
             <div className="sb-section-label">{projectLabel}</div>
 
-            {items.map(item => (
-                <NavLink
-                    key={item.suffix}
-                    to={`/projects/${projectId}/${item.suffix}`}
-                    state={projectState}
-                    className={menuClass}
-                >
-                    <span className="sb-icon">{ICONS[item.icon]}</span>
-                    {item.label}
-                </NavLink>
-            ))}
+            {items.map(item => {
+                const to = `/projects/${projectId}/${item.suffix}`;
+
+                // "Sprints" también se marca activo cuando estás en el sprint board
+                const isSprintsItem    = item.suffix === 'sprints';
+                const forceSprintActive = isSprintsItem && isOnSprintBoard;
+
+                return (
+                    <div key={item.suffix}>
+                        <NavLink
+                            to={to}
+                            state={projectState}
+                            className={({ isActive }) =>
+                                menuClass({ isActive: isActive || forceSprintActive })
+                            }
+                        >
+                            <span className="sb-icon">{ICONS[item.icon]}</span>
+                            {item.label}
+                        </NavLink>
+
+                        {/* Sub-ítem Tablero — solo cuando estás dentro de un sprint board */}
+                        {isSprintsItem && isOnSprintBoard && (
+                            <NavLink
+                                to={`/projects/${projectId}/sprint-board/${sprintBoardId}`}
+                                state={projectState}
+                                className={({ isActive }) =>
+                                    'sb-nav-item sb-nav-sub-item' + (isActive ? ' sb-nav-item-active' : '')
+                                }
+                            >
+                                <span className="sb-icon">{ICONS.sprintboard}</span>
+                                Tablero
+                            </NavLink>
+                        )}
+                    </div>
+                );
+            })}
         </div>
     );
 }
