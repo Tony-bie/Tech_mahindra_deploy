@@ -267,16 +267,24 @@ a.sb-nav-item.sb-nav-item-active {
 
 /* ── Sub-ítem (ej. Tablero dentro de Sprints) ── */
 .sb-nav-sub-item {
-  margin-left: 20px !important;
+  margin-top: 2px !important;
+  margin-left: 28px !important;
+  margin-right: 8px !important;
   font-size: 12px !important;
-  padding: 7px 14px !important;
-  opacity: 0.9;
-  border-left: 2px solid rgba(255,255,255,0.1);
-  border-radius: 0 var(--sb-radius) var(--sb-radius) 0 !important;
+  padding: 5px 10px !important;
+  color: var(--sb-text-muted) !important;
+  background: transparent !important;
+  border-radius: var(--sb-radius) !important;
+}
+
+.sb-nav-sub-item:hover {
+  background: var(--sb-bg-hover) !important;
+  color: #fff !important;
 }
 
 .sb-nav-sub-item.sb-nav-item-active {
-  border-left-color: #ff4444;
+  background: rgba(204, 0, 0, 0.35) !important;
+  color: #ffaaaa !important;
 }
 
 /* ── Responsive ── */
