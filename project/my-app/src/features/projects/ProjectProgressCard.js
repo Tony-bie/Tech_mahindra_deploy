@@ -38,7 +38,7 @@ export default function ProjectProgressCard({ projectId }) {
 
     if (!progress) return null;
 
-    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo, risk_score } = progress;
+    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo, risk_score, semaforo_overrides } = progress;
 
     const sign = desviacion > 0 ? '+' : '';
     const desviacionStr = `${sign}${desviacion.toFixed(2)}%`;
@@ -52,6 +52,12 @@ export default function ProjectProgressCard({ projectId }) {
         verde:    { label: 'Verde',    dot: '#3C9A57',  color: '#2E7D32' },
     };
     const sm = semMap[semaforo] || null;
+
+    const overrideLabels = {
+        deadline_vencido:        'Deadline vencido con avance < 100%',
+        costo_excedido:          'Costo aprobado supera el presupuesto',
+        bloqueador_critico_3dias:'Bloqueador crítico activo por más de 3 días',
+    };
 
     return (
         <div className="ppc-card">
@@ -73,6 +79,20 @@ export default function ProjectProgressCard({ projectId }) {
                     <span className={`ppc-badge ppc-badge--${statusMod}`}>{statusLabel}</span>
                 </div>
             </div>
+
+            {semaforo_overrides && semaforo_overrides.length > 0 && (
+                <div className="ppc-override-banner">
+                    <span className="ppc-override-icon">⚠</span>
+                    <div>
+                        <span className="ppc-override-title">Semáforo ajustado por alerta:</span>
+                        <ul className="ppc-override-list">
+                            {semaforo_overrides.map(key => (
+                                <li key={key}>{overrideLabels[key] || key}</li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
 
             <div className="ppc-body">
                 <div className="ppc-bars">
