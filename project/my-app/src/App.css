@@ -121,6 +121,7 @@ body {
 li::marker { color: #E31837; }
  
 .app-content{
+  position: relative;
   background-color: #fff;
   overflow-y: auto;
 }
