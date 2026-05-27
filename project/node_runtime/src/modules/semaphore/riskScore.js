@@ -79,7 +79,20 @@ function computeRiskScore({
     }
 
     const toSpanish = { green: 'verde', yellow: 'amarillo', red: 'rojo' };
-    return { score, semaforo_en, semaforo: toSpanish[semaforo_en] };
+
+    // Collect override reasons for UI transparency
+    const overrides = [];
+    if (deadline && new Date(deadline) < now && avance_real < 100) {
+        overrides.push('deadline_vencido');
+    }
+    if (presupuesto > 0 && costo_aprobado > presupuesto) {
+        overrides.push('costo_excedido');
+    }
+    if (critOver3Days) {
+        overrides.push('bloqueador_critico_3dias');
+    }
+
+    return { score, semaforo_en, semaforo: toSpanish[semaforo_en], overrides };
 }
 
 module.exports = { computeRiskScore };

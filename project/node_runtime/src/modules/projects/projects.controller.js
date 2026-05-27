@@ -633,7 +633,7 @@ async function getProjectProgress(req, res) {
             recentSP = (recentItems || []).reduce((a, wi) => a + (wi.story_points || 0), 0);
         }
 
-        const { score: risk_score, semaforo } = computeRiskScore({
+        const { score: risk_score, semaforo, overrides: semaforo_overrides } = computeRiskScore({
             desviacion,
             deadline:        project.deadline,
             avance_real,
@@ -662,6 +662,7 @@ async function getProjectProgress(req, res) {
             costo_aprobado,
             risk_score,
             semaforo,
+            semaforo_overrides,
         });
     } catch (error) {
         return res.status(500).json({ error: error.message });
