@@ -289,7 +289,6 @@ export default function ViewerProjectsTable({ user }) {
                                 <option value="desviacion_negativa">Desviación negativa</option>
                                 <option value="Riesgos_actvos">Riesgos activos</option>
                             </select>
-                        <button className="vpt-btn-ghost">Exportar</button>
                     </div>
                 </div>
 
@@ -407,24 +406,12 @@ export default function ViewerProjectsTable({ user }) {
                                                     </button>
 
                                                     {isPM && (
-                                                        <>
-                                                            <button
-                                                                className="vpt-btn-view vpt-btn-pm"
-                                                                onClick={() => setViewersModal(project)}
-                                                            >
-                                                                Visores
-                                                            </button>
-                                                            <button
-                                                                className="vpt-btn-view vpt-btn-pm"
-                                                                onClick={() =>
-                                                                    navigate(`/projects/${project.id_project}/work-items`, {
-                                                                        state: { projectName: project.project_name },
-                                                                    })
-                                                                }
-                                                            >
-                                                                Items
-                                                            </button>
-                                                        </>
+                                                        <button
+                                                            className="vpt-btn-view vpt-btn-pm"
+                                                            onClick={() => setViewersModal(project)}
+                                                        >
+                                                            Visores
+                                                        </button>
                                                     )}
                                                 </div>
                                             </td>
