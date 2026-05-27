@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import api from '../../config/api';
 import { useAuthContext } from '../../shared/context/AuthContext';
 import ProjectProgressCard from './ProjectProgressCard';
+import PredictionCard from './PredictionCard';
 import './ViewerProjectWorkspacePage.css';
 
 export default function ViewerProjectWorkspacePage() {
@@ -73,6 +74,9 @@ export default function ViewerProjectWorkspacePage() {
             <div className="vpw-body">
                 {/* Avance real vs esperado */}
                 <ProjectProgressCard projectId={id} />
+
+                {/* HU-24: Predicción del cumplimiento del deadline */}
+                <PredictionCard projectId={id} />
 
                 {/* Stats */}
                 <section className="vpw-stats-grid">
