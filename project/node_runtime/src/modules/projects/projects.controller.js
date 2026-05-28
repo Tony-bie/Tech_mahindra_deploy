@@ -1,5 +1,6 @@
 const supabase               = require('../../config/supabase');
 const { computeRiskScore }   = require('../semaphore/riskScore');
+const { buildPrediction }    = require('../semaphore/prediction');
 
 // =====================================================
 // GET /projects
@@ -531,7 +532,7 @@ async function getProjectProgress(req, res) {
 
         const { data: sprints, error: sprintErr } = await supabase
             .from('sprint')
-            .select('id_sprint, SP_estimated, deadline')
+            .select('id_sprint, SP_estimated, deadline, begin_at')
             .eq('id_project', projectId);
 
         if (sprintErr) {
@@ -565,6 +566,27 @@ async function getProjectProgress(req, res) {
         const now = new Date().toISOString();
         const pastSprints = (sprints || []).filter(s => s.deadline && s.deadline <= now);
         const sp_esperados = pastSprints.reduce((acc, s) => acc + (s.SP_estimated || 0), 0);
+
+        // ── HU-24 v3: agregar assignedSp y doneSp por sprint pasado ──────────
+        let workItemsBySprintForPrediction = {};
+        if (sprintIds.length > 0) {
+            const { data: allWorkItems } = await supabase
+                .from('work_item')
+                .select('id_sprint, story_points, status')
+                .in('id_sprint', sprintIds);
+            for (const wi of (allWorkItems || [])) {
+                const bucket = workItemsBySprintForPrediction[wi.id_sprint] || { done: 0, assigned: 0 };
+                bucket.assigned += (wi.story_points || 0);
+                if (wi.status === 'done') bucket.done += (wi.story_points || 0);
+                workItemsBySprintForPrediction[wi.id_sprint] = bucket;
+            }
+        }
+        const allPastSprintsForPrediction = pastSprints.map(s => ({
+            begin_at:   s.begin_at,
+            deadline:   s.deadline,
+            doneSp:     (workItemsBySprintForPrediction[s.id_sprint] || {}).done || 0,
+            assignedSp: (workItemsBySprintForPrediction[s.id_sprint] || {}).assigned || 0,
+        }));
 
         const avance_real     = sp_totales > 0 ? parseFloat(((sp_completados / sp_totales) * 100).toFixed(2)) : 0;
         const avance_esperado = sp_totales > 0 ? parseFloat(((sp_esperados    / sp_totales) * 100).toFixed(2)) : 0;
@@ -645,6 +667,17 @@ async function getProjectProgress(req, res) {
             expectedWeeklySP,
         });
 
+        // ── HU-24 v3: bloque de predicción temporal ─────────────────────────
+        const prediction = buildPrediction({
+            project:         { deadline: project.deadline },
+            allPastSprints:  allPastSprintsForPrediction,
+            doneSpTotal:     sp_completados,
+            totalSp:         sp_totales,
+            blockers:        blockers || [],
+            activeRisks:     activeRisks || [],
+            now:             new Date(),
+        });
+
         // Persistir en tabla semaphore para suggestions y cron
         const toEn = { verde: 'green', amarillo: 'yellow', rojo: 'red' };
         supabase.from('semaphore').upsert(
@@ -663,6 +696,7 @@ async function getProjectProgress(req, res) {
             risk_score,
             semaforo,
             semaforo_overrides,
+            prediction,
         });
     } catch (error) {
         return res.status(500).json({ error: error.message });

@@ -2,6 +2,20 @@ import { useEffect, useState } from 'react';
 import api from '../../config/api';
 import './ProjectProgressCard.css';
 
+function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatDaysDiff(diff) {
+    if (diff === null || diff === undefined) return null;
+    if (diff === 0) return 'justo en el deadline';
+    if (diff < 0)   return `${Math.abs(diff)} día(s) antes del deadline`;
+    return `${diff} día(s) después del deadline`;
+}
+
 export default function ProjectProgressCard({ projectId }) {
     const [progress, setProgress] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -38,7 +52,7 @@ export default function ProjectProgressCard({ projectId }) {
 
     if (!progress) return null;
 
-    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo, risk_score, semaforo_overrides } = progress;
+    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo, risk_score, semaforo_overrides, prediction } = progress;
 
     const sign = desviacion > 0 ? '+' : '';
     const desviacionStr = `${sign}${desviacion.toFixed(2)}%`;
@@ -149,6 +163,51 @@ export default function ProjectProgressCard({ projectId }) {
                     </div>
                 </div>
             </div>
+
+            {prediction && prediction.confidence !== 'SIN_DATOS' && (
+                <div className="ppc-prediction-section">
+                    <div className="ppc-prediction-header">
+                        <span className="ppc-prediction-label">Predicción temporal</span>
+                        <span className={`ppc-prediction-confidence ppc-prediction-confidence--${prediction.confidence.toLowerCase()}`}>
+                            Confianza {prediction.confidence.toLowerCase()}
+                        </span>
+                    </div>
+
+                    <div className="ppc-prediction-grid">
+                        <div className="ppc-prediction-meta">
+                            <span className="ppc-prediction-meta-label">Fin estimado</span>
+                            <span className="ppc-prediction-meta-value">{formatDate(prediction.estimated_finish)}</span>
+                            {formatDaysDiff(prediction.days_diff) && (
+                                <span className="ppc-prediction-meta-sub">{formatDaysDiff(prediction.days_diff)}</span>
+                            )}
+                        </div>
+
+                        <div className="ppc-prediction-meta">
+                            <span className="ppc-prediction-meta-label">Velocidad efectiva</span>
+                            <span className="ppc-prediction-meta-value">
+                                {prediction.velocity_effective != null
+                                    ? `${prediction.velocity_effective.toFixed(1)} SP/sprint`
+                                    : '—'}
+                            </span>
+                            {prediction.blocker_penalty < 1 && (
+                                <span className="ppc-prediction-meta-sub">
+                                    −{Math.round((1 - prediction.blocker_penalty) * 100)}% por bloqueadores
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="ppc-prediction-meta">
+                            <span className="ppc-prediction-meta-label">SP restantes</span>
+                            <span className="ppc-prediction-meta-value">{prediction.remaining_sp}</span>
+                            {prediction.stuck_sprints_excluded > 0 && (
+                                <span className="ppc-prediction-meta-sub">
+                                    {prediction.stuck_sprints_excluded} sprint(s) anómalo(s) excluido(s)
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {risk_score != null && (
                 <div className="ppc-score-section">

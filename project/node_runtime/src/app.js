@@ -15,7 +15,6 @@ const suggestionsRoutes = require('./modules/suggestions/suggestions.routes')
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes')
 const risksRoutes     = require('./modules/risks/risks.routes')
 const auditRoutes     = require('./modules/audit/audit.routes')
-const predictionRoutes = require('./modules/prediction/prediction.routes')
 
 const app = express();
 
@@ -41,7 +40,6 @@ app.use('/suggestions', suggestionsRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/risks',     risksRoutes)
 app.use('/audit',     auditRoutes)
-app.use('/projects/:id/prediction', predictionRoutes)
 
 app.use(errorHandler);
 
