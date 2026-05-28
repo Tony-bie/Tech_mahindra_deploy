@@ -340,3 +340,71 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ─── HU-24 v3: Predicción temporal ────────────────────────────────────── */
+.ppc-prediction-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: #FAFAF9;
+    border-radius: 8px;
+    border: 1px solid #E5E5E3;
+}
+
+.ppc-prediction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ppc-prediction-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A1A1A;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.ppc-prediction-confidence {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: capitalize;
+}
+
+.ppc-prediction-confidence--alta  { background: #DCFCE7; color: #166534; }
+.ppc-prediction-confidence--media { background: #FEF3C7; color: #92400E; }
+.ppc-prediction-confidence--baja  { background: #FEE2E2; color: #991B1B; }
+
+.ppc-prediction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.ppc-prediction-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ppc-prediction-meta-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.ppc-prediction-meta-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.ppc-prediction-meta-sub {
+    font-size: 11px;
+    color: #666;
+}

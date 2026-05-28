@@ -256,7 +256,7 @@ export default function ViewerProjectsTable({ user }) {
             result = result.filter(p => (risksMap[p.id_project] ?? 0) > 0);
         }
         return result;
-    }, [projects, query, filters, progressMap]);
+    }, [projects, query, filters, progressMap, risksMap]);
 
     if (loading) return <div className="vpt-empty">Cargando proyectos...</div>;
     if (error)   return <div className="vpt-error">{error}</div>;

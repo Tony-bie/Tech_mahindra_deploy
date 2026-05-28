@@ -66,7 +66,6 @@ export default function Sidebar({ onLogout }) {
     const sectionGeneral      = globalItems.filter(i => i.section === 'general');
     const sectionInteligencia = globalItems.filter(i => i.section === 'inteligencia');
     const sectionMyWork       = globalItems.filter(i => i.section === 'my_work');
-    const sectionRecognition  = globalItems.filter(i => i.section === 'recognition');
 
     // ── Render helper ─────────────────────────────────────────────────────────
     const renderNavItems = items =>
