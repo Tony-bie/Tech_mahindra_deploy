@@ -16,16 +16,6 @@ function fmtMty(ts) {
 }
 
 // ── Helpers (antes venían del mock) ──────────────────────────────────────────
-function getStatusBadgeColors(status) {
-    if (status === 'done'        || status === 'Done')        return { color: '#3C9A57', bg: '#E9F7ED' };
-    if (status === 'in_progress' || status === 'In Progress') return { color: '#3162D1', bg: '#E7EEFF' };
-    return { color: '#7E8693', bg: '#EEF1F5' };
-}
-function getTypeBadgeColors(type) {
-    if (type === 'bug'        || type === 'Bug')        return { color: '#B94A48', bg: '#FCE9E9' };
-    if (type === 'user_story' || type === 'User Story') return { color: '#3162D1', bg: '#E7EEFF' };
-    return { color: '#3C9A57', bg: '#E9F7ED' };
-}
 function initialsFromName(name = '') {
     const parts = String(name).split(' ').filter(Boolean);
     return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
