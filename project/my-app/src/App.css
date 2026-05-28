@@ -122,6 +122,6 @@ li::marker { color: #E31837; }
  
 .app-content{
   position: relative;
-  background-color: #fff;
+  background-color: #F5F5F4;
   overflow-y: auto;
 }
