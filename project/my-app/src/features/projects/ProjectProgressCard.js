@@ -52,7 +52,8 @@ export default function ProjectProgressCard({ projectId }) {
 
     if (!progress) return null;
 
-    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales, semaforo, risk_score, semaforo_overrides, prediction } = progress;
+    const { avance_real, avance_esperado, desviacion, sp_completados, sp_esperados, sp_totales,
+  semaforo, risk_score, semaforo_overrides, prediction } = progress;
 
     const sign = desviacion > 0 ? '+' : '';
     const desviacionStr = `${sign}${desviacion.toFixed(2)}%`;
