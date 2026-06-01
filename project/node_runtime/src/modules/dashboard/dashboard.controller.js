@@ -715,11 +715,12 @@ async function getViewerDashboard(req, res) {
         const sprintToProject = Object.fromEntries((sprints || []).map(s => [s.id_sprint, s.id_project]));
         const projectById     = Object.fromEntries((projects || []).map(p => [p.id_project, p]));
 
-        const { data: allItems } = sprintIds.length > 0
-            ? await supabase.from('work_item').select('id_work_item, id_sprint, title, type, status, story_points, assignee_id, end_date, updated_at, gamification_weight').in('id_sprint', sprintIds)
-            : { data: [] };
-
-        const myItems = (allItems || []).filter(wi => wi.assignee_id === viewerId);
+        const [{ data: allItems }, { data: myItems }] = sprintIds.length > 0
+            ? await Promise.all([
+                supabase.from('work_item').select('id_work_item, id_sprint, status, story_points').in('id_sprint', sprintIds),
+                supabase.from('work_item').select('id_work_item, id_sprint, title, type, status, story_points, end_date, updated_at, gamification_weight').in('id_sprint', sprintIds).eq('assignee_id', viewerId),
+            ])
+            : [{ data: [] }, { data: [] }];
 
         // ── Puntos de la semana actual ───────────────────────────────────────
         const now = new Date();
@@ -757,8 +758,8 @@ async function getViewerDashboard(req, res) {
             sprintTotalMap[sid] = (sprintTotalMap[sid] || 0) + (wi.story_points || 0);
             if (wi.status === 'done') sprintDoneMap[sid] = (sprintDoneMap[sid] || 0) + (wi.story_points || 0);
         }
+        const STATUS_ORDER = { active: 0, planned: 1, done: 2, cancelled: 3 };
         const sprint_progress = (sprints || [])
-            .filter(s => s.status === 'active' || s.status === 'planned')
             .map(s => ({
                 id_sprint:    s.id_sprint,
                 sprint_name:  s.name,
@@ -767,6 +768,7 @@ async function getViewerDashboard(req, res) {
                 total_sp:     sprintTotalMap[s.id_sprint] || 0,
                 status:       s.status,
             }))
+            .sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
             .slice(0, 8);
 
         // ── Mis items vencidos ───────────────────────────────────────────────

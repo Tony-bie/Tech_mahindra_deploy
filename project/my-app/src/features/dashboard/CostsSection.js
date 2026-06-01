@@ -1,5 +1,5 @@
 import {
-    PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
+    PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { COLORS, fmtMoney, prettyStatus, styles } from './dashboard.utils';
@@ -38,12 +38,14 @@ export default function CostsSection({ charts }) {
                                         data={byCat}
                                         dataKey="value"
                                         nameKey="name"
-                                        outerRadius={90}
-                                        label={d => `${d.name}: ${fmtMoney(d.value)}`}
+                                        outerRadius={80}
+                                        innerRadius={45}
+                                        paddingAngle={2}
                                     >
                                         {byCat.map((_, i) => <Cell key={i} fill={COLORS.palette[i % COLORS.palette.length]} />)}
                                     </Pie>
                                     <Tooltip formatter={v => fmtMoney(v)} />
+                                    <Legend />
                                 </PieChart>
                             </ResponsiveContainer>
                         )}
