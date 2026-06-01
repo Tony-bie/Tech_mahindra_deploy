@@ -105,7 +105,7 @@ export default function ViewerWorkItemDetailPage() {
             try {
                 const { res, data } = await api.get(`/blockers?work_item_id=${workItem.id}`);
                 if (res.ok) {
-                    setBlockers((data.blockers || []).filter(b => !b.resolved_at));
+                    setBlockers((data.blockers || []).filter(b => !b.resolved_at && !b.is_expired));
                 } else {
                     console.error('Error cargando bloqueadores:', data.message);
                 }
@@ -483,29 +483,6 @@ export default function ViewerWorkItemDetailPage() {
                             <div className="vwid-summary-row"><span>Objetivo</span><strong>{workItem.targetDate}</strong></div>
                         </div>
 
-                        {isMyItem && (
-                            <>
-                                <div className={`vwid-risk-card ${blockers.some(b => b.severity === 'critical' && b.approval_status === 'approved') ? 'is-critical' : ''}`}>
-                                    <div className="vwid-card-label">Estado de bloqueadores</div>
-                                    <div className="vwid-risk-main">
-                                        <div>
-                                            <div className="vwid-risk-value">{blockers.filter(b => b.approval_status === 'approved').length} aprobados</div>
-                                            <div className="vwid-risk-caption">Bloqueadores registrados y aprobados</div>
-                                        </div>
-                                    </div>
-                                    <div className="vwid-risk-note">
-                                        {blockers.some(b => b.severity === 'critical' && b.approval_status === 'approved') ? 'Hay un bloqueador crítico aprobado; debería mostrarse al PM.' : 'No hay bloqueadores críticos aprobados.'}
-                                    </div>
-                                </div>
-
-                                <div className="vwid-summary-card vwid-audit-card">
-                                    <div className="vwid-card-label">Trazabilidad</div>
-                                    <div className="vwid-audit-item">Bloqueadores vinculados al ítem #{workItem.id}</div>
-                                    <div className="vwid-audit-item">Proyecto: #{id}</div>
-                                    <div className="vwid-audit-item">Se requiere aprobación del PM para que sean oficiales</div>
-                                </div>
-                            </>
-                        )}
                     </aside>
                 </div>
             </div>

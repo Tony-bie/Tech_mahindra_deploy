@@ -227,8 +227,10 @@ async function listBlockers(req, res) {
             );
         }
 
+        const nowStr = new Date().toISOString();
         const enriched = (blockers || []).map(b => ({
             ...b,
+            is_expired: b.approval_status === 'approved' && !!b.deadline && b.deadline < nowStr && !b.resolved_at,
             created_by_user: b.created_by ? userMap[b.created_by] : null,
             approved_by_user: b.approved_by ? userMap[b.approved_by] : null,
             work_item: workItemMap[b.id_work_item] || null,

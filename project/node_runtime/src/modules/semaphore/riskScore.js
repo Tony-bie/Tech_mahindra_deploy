@@ -61,8 +61,11 @@ function computeRiskScore({
     // ── Semáforo base por score (RF-23) ─────────────────────────────────────
     let semaforo_en = score >= 70 ? 'red' : score >= 40 ? 'yellow' : 'green';
 
+    const overrides = [];
+
     // ── Override RF-24: deadline vencido + avance < 100% → Rojo ─────────────
     if (deadline && new Date(deadline) < now && avance_real < 100) {
+        if (semaforo_en !== 'red') overrides.push('deadline_vencido');
         semaforo_en = 'red';
     }
 
@@ -70,27 +73,17 @@ function computeRiskScore({
     // Costo aprobado > presupuesto
     if (presupuesto > 0 && costo_aprobado > presupuesto && semaforo_en === 'green') {
         semaforo_en = 'yellow';
+        overrides.push('costo_excedido');
     }
     // Blocker crítico activo > 3 días
     const threeDaysAgo = new Date(now - 3 * 86400000);
     const critOver3Days = criticals.some(b => new Date(b.created_at) < threeDaysAgo);
     if (critOver3Days && semaforo_en === 'green') {
         semaforo_en = 'yellow';
+        overrides.push('bloqueador_critico_3dias');
     }
 
     const toSpanish = { green: 'verde', yellow: 'amarillo', red: 'rojo' };
-
-    // Collect override reasons for UI transparency
-    const overrides = [];
-    if (deadline && new Date(deadline) < now && avance_real < 100) {
-        overrides.push('deadline_vencido');
-    }
-    if (presupuesto > 0 && costo_aprobado > presupuesto) {
-        overrides.push('costo_excedido');
-    }
-    if (critOver3Days) {
-        overrides.push('bloqueador_critico_3dias');
-    }
 
     return { score, semaforo_en, semaforo: toSpanish[semaforo_en], overrides };
 }
