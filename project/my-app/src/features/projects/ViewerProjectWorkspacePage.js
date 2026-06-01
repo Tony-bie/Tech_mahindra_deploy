@@ -55,6 +55,13 @@ export default function ViewerProjectWorkspacePage() {
     const progress     = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
     const inProgress   = items.filter(i => i.status === 'in_progress').length;
 
+    const sprintItems    = activeSprint ? items.filter(i => i.id_sprint === activeSprint.id_sprint) : [];
+    const sprintDone     = sprintItems.filter(i => i.status === 'done').length;
+    const sprintProgress = sprintItems.length > 0 ? Math.round((sprintDone / sprintItems.length) * 100) : 0;
+    const daysLeft       = activeSprint?.deadline
+        ? Math.ceil((new Date(activeSprint.deadline) - new Date()) / 86400000)
+        : null;
+
     return (
         <div className="vpw-page">
             <div className="vpw-top-bar">
@@ -100,90 +107,88 @@ export default function ViewerProjectWorkspacePage() {
                             {loading ? '—' : activeRisks}
                         </strong>
                     </div>
-                    <div className="vpw-stat-card">
-                        <span className="vpw-stat-label">Sprint activo</span>
-                        <strong className="vpw-stat-value" style={{ fontSize: 15 }}>
-                            {loading ? '—' : activeSprint ? activeSprint.name : 'Sin sprint'}
-                        </strong>
-                        {activeSprint?.SP_estimated && (
-                            <span className="vpw-stat-hint">{activeSprint.SP_estimated} SP estimados</span>
+                </section>
+
+                {/* Sprint activo */}
+                {!loading && activeSprint && (
+                    <div className="vpw-sprint-card">
+                        <div className="vpw-sprint-col vpw-sprint-col--name">
+                            <span className="vpw-stat-label">Sprint activo</span>
+                            <strong className="vpw-sprint-name">{activeSprint.name}</strong>
+                        </div>
+                        <div className="vpw-sprint-col">
+                            <span className="vpw-stat-label">Deadline</span>
+                            <strong className="vpw-sprint-meta-value">
+                                {activeSprint.deadline
+                                    ? new Date(activeSprint.deadline).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+                                    : '—'}
+                            </strong>
+                            {daysLeft !== null && (
+                                <span className="vpw-stat-hint" style={{ color: daysLeft < 0 ? '#B94A48' : daysLeft <= 3 ? '#8A5A00' : '#7B7B7B' }}>
+                                    {daysLeft < 0 ? `${Math.abs(daysLeft)} día(s) vencido` : daysLeft === 0 ? 'Vence hoy' : `${daysLeft} día(s) restantes`}
+                                </span>
+                            )}
+                        </div>
+                        <div className="vpw-sprint-col">
+                            <span className="vpw-stat-label">SP estimados</span>
+                            <strong className="vpw-sprint-meta-value">{activeSprint.SP_estimated ?? '—'}</strong>
+                        </div>
+                        <div className="vpw-sprint-col">
+                            <span className="vpw-stat-label">Progreso del sprint</span>
+                            <strong className="vpw-sprint-meta-value">{sprintProgress}%</strong>
+                            <span className="vpw-stat-hint">{sprintDone} de {sprintItems.length} ítems</span>
+                            <span className="vpw-progress-track" style={{ marginTop: 4 }}>
+                                <span className="vpw-progress-fill" style={{ width: `${sprintProgress}%` }} />
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Work items */}
+                <div className="vpw-card">
+                    <div className="vpw-card-header">
+                        <div className="vpw-card-title">Ítems del proyecto</div>
+                        <button
+                            className="vpw-snapshot-btn"
+                            onClick={() => navigate(
+                                isPM
+                                    ? `/projects/${id}/work-items`
+                                    : `/projects/${id}/backlog`,
+                                { state: { projectName } }
+                            )}
+                        >
+                            Ver todos
+                        </button>
+                    </div>
+                    <div className="vpw-snapshot-list">
+                        {loading ? (
+                            <div style={{ padding: '16px 0', color: '#AAA', fontSize: 13 }}>Cargando ítems...</div>
+                        ) : items.length === 0 ? (
+                            <div style={{ padding: '16px 0', color: '#AAA', fontSize: 13 }}>No hay ítems en este proyecto.</div>
+                        ) : (
+                            items.slice(0, 5).map((item) => (
+                                <div key={item.id_work_item} className="vpw-snapshot-row">
+                                    <div>
+                                        <div className="vpw-snapshot-title">{item.title}</div>
+                                        <div className="vpw-snapshot-meta">
+                                            {item.type || 'Tarea'}
+                                            {item.assignee ? ` · ${item.assignee.username}` : ''}
+                                            {item.story_points ? ` · ${item.story_points} SP` : ''}
+                                        </div>
+                                    </div>
+                                    {!isPM && (
+                                        <button
+                                            className="vpw-snapshot-btn"
+                                            onClick={() => navigate(`/projects/${id}/backlog/${item.id_work_item}`, { state: { projectName } })}
+                                        >
+                                            Ver
+                                        </button>
+                                    )}
+                                </div>
+                            ))
                         )}
                     </div>
-                </section>
-
-                <section className="vpw-content-grid">
-                    <div className="vpw-main-column">
-                        {/* Work items */}
-                        <div className="vpw-card">
-                            <div className="vpw-card-header">
-                                <div className="vpw-card-title">Ítems del proyecto</div>
-                                <button
-                                    className="vpw-snapshot-btn"
-                                    onClick={() => navigate(
-                                        isPM
-                                            ? `/projects/${id}/work-items`
-                                            : `/projects/${id}/backlog`,
-                                        { state: { projectName } }
-                                    )}
-                                >
-                                    Ver todos
-                                </button>
-                            </div>
-                            <div className="vpw-snapshot-list">
-                                {loading ? (
-                                    <div style={{ padding: '16px 0', color: '#AAA', fontSize: 13 }}>Cargando ítems...</div>
-                                ) : items.length === 0 ? (
-                                    <div style={{ padding: '16px 0', color: '#AAA', fontSize: 13 }}>No hay ítems en este proyecto.</div>
-                                ) : (
-                                    items.slice(0, 5).map((item) => (
-                                        <div key={item.id_work_item} className="vpw-snapshot-row">
-                                            <div>
-                                                <div className="vpw-snapshot-title">{item.title}</div>
-                                                <div className="vpw-snapshot-meta">
-                                                    {item.type || 'Tarea'}
-                                                    {item.assignee ? ` · ${item.assignee.username}` : ''}
-                                                    {item.story_points ? ` · ${item.story_points} SP` : ''}
-                                                </div>
-                                            </div>
-                                            {!isPM && (
-                                                <button
-                                                    className="vpw-snapshot-btn"
-                                                    onClick={() => navigate(`/projects/${id}/backlog/${item.id_work_item}`, { state: { projectName } })}
-                                                >
-                                                    Ver
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <aside className="vpw-side-column">
-                        <div className="vpw-side-card">
-                            <div className="vpw-section-label">Navegación</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                                <button className="vpw-quick-action" onClick={() => navigate(`/projects/${id}/leaderboard`, { state: { projectName } })}>
-                                    Leaderboard
-                                </button>
-                                {isPM && (
-                                <button className="vpw-quick-action" onClick={() => navigate(`/projects/${id}/audit`, { state: { projectName } })}>
-                                    Auditoría
-                                </button>
-                                )}
-                                {isPM && (
-                                    <button
-                                        className="vpw-quick-action"
-                                        onClick={() => navigate(`/projects/${id}/risks`, { state: { projectName } })}
-                                    >
-                                        Riesgos
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </aside>
-                </section>
+                </div>
             </div>
         </div>
     );
