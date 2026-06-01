@@ -111,30 +111,45 @@ function MyItemsCharts({ charts }) {
 
 function SprintProgressSection({ charts }) {
     const data = (charts?.sprint_progress || []).map(s => ({
-        name: s.sprint_name?.length > 20 ? s.sprint_name.slice(0, 18) + '…' : s.sprint_name,
+        name: s.sprint_name?.length > 22 ? s.sprint_name.slice(0, 20) + '…' : s.sprint_name,
+        rawName: s.sprint_name,
         project: s.project_name,
+        status: s.status,
         Completado: s.done_sp,
         Pendiente: Math.max(0, s.total_sp - s.done_sp),
     }));
-
-    if (data.length === 0) return null;
 
     return (
         <>
             <div style={styles.sectionTitle}>Progreso de sprints</div>
             <div style={styles.card}>
-                <div style={styles.cardTitle}>Story Points — sprints activos y planeados</div>
-                <ResponsiveContainer width="100%" height={Math.max(180, data.length * 42)}>
-                    <BarChart data={data} layout="vertical" margin={{ left: 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 11 }} />
-                        <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={130} />
-                        <Tooltip />
-                        <Legend wrapperStyle={{ fontSize: 11 }} />
-                        <Bar dataKey="Completado" stackId="a" fill={COLORS.success} />
-                        <Bar dataKey="Pendiente"  stackId="a" fill={COLORS.muted}   />
-                    </BarChart>
-                </ResponsiveContainer>
+                <div style={styles.cardTitle}>Story Points por sprint</div>
+                {data.length === 0
+                    ? <div style={styles.muted}>Sin sprints en tus proyectos.</div>
+                    : (
+                        <ResponsiveContainer width="100%" height={Math.max(180, data.length * 44)}>
+                            <BarChart data={data} layout="vertical" margin={{ left: 10, right: 16 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                <XAxis type="number" tick={{ fontSize: 11 }} />
+                                <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    tick={{ fontSize: 10 }}
+                                    width={140}
+                                />
+                                <Tooltip
+                                    formatter={(value, name) => [value, name]}
+                                    labelFormatter={(label, payload) => {
+                                        const item = payload?.[0]?.payload;
+                                        return `${item?.rawName || label} · ${item?.project || ''}`;
+                                    }}
+                                />
+                                <Legend wrapperStyle={{ fontSize: 11 }} />
+                                <Bar dataKey="Completado" stackId="a" fill={COLORS.success} />
+                                <Bar dataKey="Pendiente"  stackId="a" fill={COLORS.muted}   />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
             </div>
             <div style={{ height: 24 }} />
         </>
