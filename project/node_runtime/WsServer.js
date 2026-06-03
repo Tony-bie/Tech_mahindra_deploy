@@ -36,7 +36,7 @@ server.on('connection', (socket) => {
 server.on('listening', () => {
     const addr = server.address()
     console.log(addr)
-    console.log('WebSocket server is running on ws://localhost:8081');
+    console.log(`WebSocket server is running on ${process.env.WS_API_URL || 'http://localhost:8081'}`);
 })
 
 module.exports = server;

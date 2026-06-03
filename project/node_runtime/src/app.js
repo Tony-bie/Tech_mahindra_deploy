@@ -23,7 +23,7 @@ require('../WsServer')
 
 app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: [process.env.BACKEND_API_URL || 'http://localhost:8080', process.env.WS_API_URL || 'http://localhost:8081', process.env.REACT_APP_API_URL || 'http://localhost:3000'],
     credentials: true,
 }));
 app.use(cookieParser());
