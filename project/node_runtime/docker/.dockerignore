@@ -45,5 +45,7 @@ Dockerfile
 docker-compose.yml
 docker-compose.override.yml
 
-# Ignore build-specific cache files
-*.lock
+package-lock.json
+yarn.lock
+
+pnpm-debug.log*
