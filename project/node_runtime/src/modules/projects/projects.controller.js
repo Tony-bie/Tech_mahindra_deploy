@@ -609,19 +609,26 @@ async function getProjectProgress(req, res) {
         }
 
         // ── Risk Score RF-21/22/23/24/25 ────────────────────────────────────────
-        const [{ data: blockers }, { data: activeRisks }] = await Promise.all([
+        const [{ data: blockersRaw }, { data: activeRisks }] = await Promise.all([
             supabase
                 .from('blocker_implication')
-                .select('severity, approval_status, created_at')
+                .select('severity, approval_status, created_at, deadline, resolved_at')
                 .eq('id_project', projectId)
                 .eq('kind', 'blocker')
-                .in('approval_status', ['pending', 'approved']),
+                .in('approval_status', ['pending', 'approved'])
+                .is('resolved_at', null),
             supabase
                 .from('risk')
                 .select('level')
                 .eq('id_project', projectId)
                 .eq('status', 'active'),
         ]);
+
+        // Excluir bloqueadores aprobados cuyo deadline ya venció (expirados)
+        const nowIso = new Date().toISOString();
+        const blockers = (blockersRaw || []).filter(b =>
+            !(b.approval_status === 'approved' && b.deadline && b.deadline < nowIso)
+        );
 
         // Presupuesto estimado
         let presupuesto = 0;

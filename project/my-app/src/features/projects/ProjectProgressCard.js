@@ -168,7 +168,7 @@ export default function ProjectProgressCard({ projectId }) {
             {prediction && prediction.confidence !== 'SIN_DATOS' && (
                 <div className="ppc-prediction-section">
                     <div className="ppc-prediction-header">
-                        <span className="ppc-prediction-label">Predicción temporal</span>
+                        <span className="ppc-prediction-label">Predicción temporal del proyecto</span>
                         <span className={`ppc-prediction-confidence ppc-prediction-confidence--${prediction.confidence.toLowerCase()}`}>
                             Confianza {prediction.confidence.toLowerCase()}
                         </span>
