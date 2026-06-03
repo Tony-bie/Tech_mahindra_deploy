@@ -16,7 +16,7 @@ COPY . .
 
 RUN pnpm run build
 
-FROM dhi.io/nginx:1-debian13-dev AS runner
+FROM nginx AS runner
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
